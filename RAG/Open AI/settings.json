@@ -1,0 +1,33 @@
+{
+  "vectorStoreId": "vs_694fef409cb48191ae994fefb67b1b97",
+  "name": "Urvar",
+  "description": "Vector store for Urvar project documents",
+  "embedding_model": "text-embedding-3-large",
+  "dimension": 3072,
+  "distance_metric": "cosine",
+  "shard_count": 1,
+  "file_count": 2,
+  "files": [
+    {
+      "file_id": "file-abc123",
+      "filename": "doc1.pdf",
+      "filePath": "E:\\AI Assistant\\RAG\\docs\\urvar-summary.md",
+      "size_bytes": 24576,
+      "uploaded_at": "2025-12-20T12:00:00.000Z"
+    }
+  ],
+  "metadata": {
+    "project": "Urvar",
+    "owner": "dchanda5566@gmail.com"
+  },
+  "settings": {
+    "indexing": {
+      "batch_size": 256,
+      "concurrency": 4
+    },
+    "access": {
+      "public": false,
+      "read_roles": ["admin", "search-service"]
+    }
+  }
+}
