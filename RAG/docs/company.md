@@ -1,42 +1,43 @@
 # Urvar Natural Pvt. Ltd. — Company Profile
 
 ## Overview
-- **Full Name:** Urvar Natural Pvt. Ltd.
-- **Founded:** [Year]
-- **Registered Office:** Kolkata, West Bengal, India
-- **Type:** Private Limited Company
-- **Industry:** Bio-fertilizer / Organic Agriculture Inputs
+- **Full Name:** M/S Urvar Natural Private Limited
+- **Founded:** 02 August 2023
+- **Registered Office:** Sewli, Telenipara, Bandipara, North 24 Parganas, Kolkata 700121, West Bengal, India
+- **Type:** Private Limited Company (Micro Enterprise)
+- **Industry:** Agri-input Manufacturing — Organic Fertilizers & Bio-Stimulants
+- **Tagline:** "Urvar know the needs of the Plants"
+- **Website:** urvarindia.com
+- **Contact:** 9035708943 / 8335825566
+- **Email:** suparna.greenfield@gmail.com
 
 ## Mission
-[Write 2-3 sentences about why Urvar was started and what it stands for]
+To empower farmers with eco-friendly, high-performance organic solutions that improve livelihoods and preserve nature for future generations.
 
 ## Vision
-[Write 1-2 sentences about where you want the company to be in 5-10 years]
+To be the most trusted global brand in sustainable agriculture, driven by innovation, quality, and the prosperity of the farming community.
 
-## Team
-- **Founder / CEO:** [Name]
-- **Operations:** [Name and role]
-- **Sales:** [Name and role]
+## Director's Statement
+**Shri. Ratanlal Chowdhury — Director**
+"We believe that sustainable agriculture is not just a practice but a way of life. Our commitment to organic farming is driven by the vision of a healthier, greener, and more prosperous future for our farmers, our communities, and our planet."
 
-## Manufacturing
-- **Location:** [City, State]
-- **Facility Size:** [sq ft or acres]
-- **Monthly Capacity:** [X kg or tonnes of vermicompost per month]
-- **Raw Materials:** [Cow dung, kitchen waste, agricultural waste — list what you use]
-- **Earthworm Species Used:** [e.g. Eisenia fetida / Red Wigglers]
-- **Composting Duration:** [X weeks]
+## Company Description
+Urvar Natural Private Limited is a science-driven agri-input company committed to restoring soil health and improving farm productivity through high-quality organic and micronutrient solutions. Based in West Bengal, we focus on developing performance-oriented fertilizers that enhance nutrient efficiency, crop yield, and long-term soil sustainability. We believe healthy soil is the foundation of profitable farming.
 
-## Certifications & Compliance
-- [e.g. PGS-India Organic Certified]
-- [e.g. FSSAI Registration]
-- [e.g. FCO (Fertilizer Control Order) compliant]
-- [Any other certifications]
+## Core Values
+- Organic
+- Eco-Friendly
+- Sustainable
 
-## Contact
-- **Email:** mail.bharatorganics@gmail.com
-- **Phone:** 8335825566
-- **Website:** [URL]
-- **Amazon Store:** [URL]
-- **Flipkart Store:** [URL]
-- **Instagram:** [handle]
-- **Facebook:** [handle]
+## Certifications & Registrations
+- **UDYAM Registration Number:** UDYAM-WB-14-0115346
+- **Enterprise Type:** Micro Enterprise (Manufacturing)
+- **Classification Date:** 19/02/2024
+- **NIC Code:** 32909 — Manufacture of other articles n.e.c.
+- **Registered under:** Ministry of Micro, Small and Medium Enterprises, Government of India
+
+## Sales Channels
+- Amazon India
+- Flipkart
+- Website: urvarindia.com
+- Direct / B2B
