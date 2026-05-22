@@ -24,6 +24,7 @@ I'm your intelligent business assistant for *Urvar Natural Pvt. Ltd.* — powere
 🔍 *Competitive Analysis* — competitor benchmarking, positioning, opportunities
 ✍️ *Sales & Marketing* — product copy, social posts, emails, WhatsApp messages
 🔬 *R&D / Product Development* — formulations, new products, certifications
+🎯 *Lead Generation* — find distributors, agri-retailers, nurseries & cooperatives to pitch — with outreach messages
 
 *Commands:*
 /start — Show this welcome message
@@ -50,6 +51,9 @@ Ask to: write product descriptions, Instagram/Facebook posts, WhatsApp messages,
 
 🔬 *R&D / Product Development Agent*
 Ask about: new product ideas, vermicompost formulations, NPK benchmarks, organic certifications (PGS-India, NPOP), crop-specific application rates, production improvements
+
+🎯 *Lead Generation Agent*
+Ask to: find distributors in a region, find nurseries or agri-retailers to pitch, discover Farmer Producer Organizations (FPOs), generate an outreach WhatsApp message or email for a lead type
 
 *Tips:*
 • Be specific — "write an Instagram post for farmers in Bengal" works better than "write a post"

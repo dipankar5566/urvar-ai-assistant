@@ -4,6 +4,7 @@ import { runMarketResearchAgent } from "./agents/market-research.js";
 import { runCompetitiveAnalysisAgent } from "./agents/competitive-analysis.js";
 import { runSalesMarketingAgent } from "./agents/sales-marketing.js";
 import { runRdProductAgent } from "./agents/rd-product.js";
+import { runLeadGenerationAgent } from "./agents/lead-generation.js";
 import { getMemories } from "./memory.js";
 
 dotenv.config();
@@ -17,12 +18,14 @@ Available specialist agents:
 2. **Competitive Analysis Agent** — competitors, competitor products/pricing, market positioning, competitive gaps, benchmarking against other vermicompost brands.
 3. **Sales & Marketing Agent** — product descriptions, social media posts, WhatsApp messages, email campaigns, customer query responses, promotional strategies.
 4. **R&D / Product Development Agent** — formulation research, agronomic data, new product ideas, certifications, production improvements, scientific literature on bio-fertilizers.
+5. **Lead Generation Agent** — finding B2B leads: distributors, agri-retailers, nurseries, garden centers, cooperatives, and Farmer Producer Organizations (FPOs) who could stock or resell Urvar products. Also drafts outreach messages.
 
 Your job:
 - Market size, trends, demand, customer segments → call_market_research_agent
 - Competitors, pricing comparison, brand benchmarking → call_competitive_analysis_agent
 - Content creation, marketing copy, social posts, emails, customer replies → call_sales_marketing_agent
 - Formulations, new products, certifications, agronomic research → call_rd_product_agent
+- Finding distributors, retailers, nurseries, cooperatives, FPOs, or any sales leads → call_lead_generation_agent
 - General questions about Urvar or greetings → answer directly
 - When unsure, choose the most relevant agent or ask for clarification
 
@@ -89,6 +92,21 @@ const tools = [
       required: ["query"],
     },
   },
+  {
+    name: "call_lead_generation_agent",
+    description:
+      "Delegate to the Lead Generation specialist agent. Use for finding potential B2B customers: distributors, agri-retailers, nurseries, garden centers, cooperatives, and Farmer Producer Organizations (FPOs) who could stock or resell Urvar products. Use when the user asks to find leads, generate a prospect list, or draft outreach messages for sales targets.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "The lead generation request, including the type of business to find and the target geography.",
+        },
+      },
+      required: ["query"],
+    },
+  },
 ];
 
 const cachedTools = tools.map((t, i) =>
@@ -140,6 +158,8 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
           result = await runSalesMarketingAgent(toolUse.input.query, []);
         } else if (toolUse.name === "call_rd_product_agent") {
           result = await runRdProductAgent(toolUse.input.query, []);
+        } else if (toolUse.name === "call_lead_generation_agent") {
+          result = await runLeadGenerationAgent(toolUse.input.query, []);
         } else {
           result = `Unknown agent: ${toolUse.name}`;
         }
