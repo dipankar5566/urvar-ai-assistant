@@ -13,6 +13,7 @@ if (!TOKEN) {
 }
 
 const bot = new TelegramBot(TOKEN, { polling: true });
+const turnCounters = new Map();
 
 const WELCOME_MESSAGE = `👋 Welcome to *Urvar AI Assistant*!
 
@@ -98,8 +99,12 @@ bot.on("message", async (msg) => {
     if (history.length > 20) history.splice(0, history.length - 20);
     saveHistory(chatId, history);
 
-    // Extract and save memorable facts in the background (non-blocking)
-    extractAndSaveMemories(chatId, text, reply).catch(() => {});
+    // Extract memorable facts every 3 turns (non-blocking)
+    const turnCount = (turnCounters.get(chatId) || 0) + 1;
+    turnCounters.set(chatId, turnCount);
+    if (turnCount % 3 === 0) {
+      extractAndSaveMemories(chatId, text, reply).catch(() => {});
+    }
 
     clearInterval(typingInterval);
 

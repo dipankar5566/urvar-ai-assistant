@@ -12,6 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const settingsPath = path.resolve(__dirname, "../../RAG/Open AI/settings.json");
 
 let vectorStoreId = null;
+let cachedAssistantId = null;
 
 async function getVectorStoreId() {
   if (vectorStoreId) return vectorStoreId;
@@ -21,24 +22,40 @@ async function getVectorStoreId() {
   return vectorStoreId;
 }
 
-export async function queryKnowledgeBase({ query }) {
-  const storeId = await getVectorStoreId();
-  if (!storeId) throw new Error("vectorStoreId not found in settings.json");
-
+async function getOrCreateAssistant(storeId) {
+  if (cachedAssistantId) {
+    try {
+      await openai.beta.assistants.retrieve(cachedAssistantId);
+      return cachedAssistantId;
+    } catch (err) {
+      if (err.status === 404) cachedAssistantId = null;
+      else throw err;
+    }
+  }
   const assistant = await openai.beta.assistants.create({
     name: "Urvar Knowledge Retriever",
     model: "gpt-4o-mini",
     tools: [{ type: "file_search" }],
     tool_resources: { file_search: { vector_store_ids: [storeId] } },
   });
+  cachedAssistantId = assistant.id;
+  return cachedAssistantId;
+}
+
+export async function queryKnowledgeBase({ query }) {
+  const storeId = await getVectorStoreId();
+  if (!storeId) throw new Error("vectorStoreId not found in settings.json");
+
+  const assistantId = await getOrCreateAssistant(storeId);
+  let thread;
 
   try {
-    const thread = await openai.beta.threads.create({
+    thread = await openai.beta.threads.create({
       messages: [{ role: "user", content: query }],
     });
 
     await openai.beta.threads.runs.createAndPoll(thread.id, {
-      assistant_id: assistant.id,
+      assistant_id: assistantId,
     });
 
     const messages = await openai.beta.threads.messages.list(thread.id);
@@ -54,7 +71,7 @@ export async function queryKnowledgeBase({ query }) {
 
     return answer || "No relevant information found in the knowledge base.";
   } finally {
-    await openai.beta.assistants.del(assistant.id);
+    if (thread) await openai.beta.threads.del(thread.id);
   }
 }
 

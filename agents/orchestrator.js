@@ -91,17 +91,26 @@ const tools = [
   },
 ];
 
-export async function runOrchestrator(userMessage, history = [], chatId = null) {
-  // Build system prompt with long-term memories if available
-  let systemPrompt = SYSTEM_PROMPT;
-  if (chatId) {
-    const memories = getMemories(chatId);
-    if (memories.length > 0) {
-      const memoryText = memories.map((m) => `- ${m.fact}`).join("\n");
-      systemPrompt += `\n\n## What you remember about this business (from past conversations):\n${memoryText}\n\nUse these facts to give more relevant, contextual answers.`;
-    }
-  }
+const cachedTools = tools.map((t, i) =>
+  i === tools.length - 1 ? { ...t, cache_control: { type: "ephemeral" } } : t
+);
 
+function buildSystemBlocks(chatId) {
+  const base = {
+    type: "text",
+    text: SYSTEM_PROMPT,
+    cache_control: { type: "ephemeral" },
+  };
+  const memories = chatId ? getMemories(chatId) : [];
+  if (memories.length === 0) return [base];
+  const memoryText =
+    "\n\n## What you remember about this business (from past conversations):\n" +
+    memories.map((m) => `- ${m.fact}`).join("\n") +
+    "\n\nUse these facts to give more relevant, contextual answers.";
+  return [base, { type: "text", text: memoryText }];
+}
+
+export async function runOrchestrator(userMessage, history = [], chatId = null) {
   const messages = [
     ...history,
     { role: "user", content: userMessage },
@@ -110,8 +119,8 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
   let response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 512,
-    system: systemPrompt,
-    tools,
+    system: buildSystemBlocks(chatId),
+    tools: cachedTools,
     messages,
   });
 
@@ -151,8 +160,8 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
     response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
-      system: systemPrompt,
-      tools,
+      system: buildSystemBlocks(chatId),
+      tools: cachedTools,
       messages,
     });
   }

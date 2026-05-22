@@ -38,6 +38,7 @@ export async function runMarketResearchAgent(userMessage, history = []) {
   });
 
   // Agentic loop — keep running until no more tool calls
+  let loopIteration = 0;
   while (response.stop_reason === "tool_use") {
     const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
     const toolResults = [];
@@ -56,15 +57,22 @@ export async function runMarketResearchAgent(userMessage, history = []) {
         result = { error: err.message };
       }
 
+      const resultText = typeof result === "string" ? result : JSON.stringify(result);
+      const isLastTool = toolUseBlocks.indexOf(toolUse) === toolUseBlocks.length - 1;
+      const shouldCache = loopIteration === 0 && isLastTool;
+
       toolResults.push({
         type: "tool_result",
         tool_use_id: toolUse.id,
-        content: typeof result === "string" ? result : JSON.stringify(result),
+        content: shouldCache
+          ? [{ type: "text", text: resultText, cache_control: { type: "ephemeral" } }]
+          : resultText,
       });
     }
 
     messages.push({ role: "assistant", content: response.content });
     messages.push({ role: "user", content: toolResults });
+    loopIteration++;
 
     response = await client.messages.create({
       model: "claude-sonnet-4-6",
