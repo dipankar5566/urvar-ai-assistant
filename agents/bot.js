@@ -21,6 +21,8 @@ I'm your intelligent business assistant for *Urvar Natural Pvt. Ltd.* — powere
 *What I can help you with:*
 📊 *Market Research* — market size, trends, customer segments, pricing
 🔍 *Competitive Analysis* — competitor benchmarking, positioning, opportunities
+✍️ *Sales & Marketing* — product copy, social posts, emails, WhatsApp messages
+🔬 *R&D / Product Development* — formulations, new products, certifications
 
 *Commands:*
 /start — Show this welcome message
@@ -28,8 +30,9 @@ I'm your intelligent business assistant for *Urvar Natural Pvt. Ltd.* — powere
 /clear — Reset conversation history
 
 Just type your question and I'll route it to the right expert. Try:
-_"Who are the top vermicompost competitors in India?"_
-_"What is the market size for organic fertilizer in India?"_`;
+_"Write an Instagram post for our vermicompost product"_
+_"What new products should we develop?"_
+_"Who are our top competitors in India?"_`;
 
 const HELP_MESSAGE = `*Urvar AI Assistant — Help*
 
@@ -41,10 +44,16 @@ Ask about: market size, growth trends, demand patterns, customer segments, prici
 🔍 *Competitive Analysis Agent*
 Ask about: competitor profiles, competitor products & pricing, market gaps, differentiation strategy, benchmarking
 
+✍️ *Sales & Marketing Agent*
+Ask to: write product descriptions, Instagram/Facebook posts, WhatsApp messages, email campaigns, reply to customer queries, suggest promotions
+
+🔬 *R&D / Product Development Agent*
+Ask about: new product ideas, vermicompost formulations, NPK benchmarks, organic certifications (PGS-India, NPOP), crop-specific application rates, production improvements
+
 *Tips:*
-• Be specific — "vermicompost competitors in West Bengal" works better than "competitors"
-• Ask follow-up questions — I remember the conversation context
-• Use /clear to start a fresh analysis
+• Be specific — "write an Instagram post for farmers in Bengal" works better than "write a post"
+• Ask follow-up questions — I remember context within the conversation
+• Use /clear to reset history and memory
 
 *Commands:* /start /help /clear`;
 
