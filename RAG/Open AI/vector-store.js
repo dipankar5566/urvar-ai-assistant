@@ -74,14 +74,14 @@ async function indexFiles() {
 
   const results = [];
   for (const f of files) {
-    if (!f || (!f.file_id && !f.fileId && !f.filename)) {
-      console.warn("Skipping invalid file entry (missing file_id/filename):", f);
+    if (!f || !f.filePath) {
+      console.warn("Skipping invalid file entry (missing filePath):", f);
       continue;
     }
 
     try {
       let file = await readFile(f.filePath);
-      const res = await openai.beta.vectorStores.files.create(vectorStoreId, { file_id: file.id });
+      const res = await openai.vectorStores.files.create(vectorStoreId, { file_id: file.id });
       console.log("Uploaded file to vector store:", f.filePath, "->", res);
       results.push(res);
     } catch (err) {
