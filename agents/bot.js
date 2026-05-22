@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { runOrchestrator } from "./orchestrator.js";
 import { getHistory, saveHistory, clearHistory } from "./db.js";
 import { extractAndSaveMemories, clearMemories } from "./memory.js";
+import { startScheduler, sendWeeklyReport } from "./scheduler.js";
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ if (!TOKEN) {
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 const turnCounters = new Map();
+startScheduler(bot);
 
 const WELCOME_MESSAGE = `👋 Welcome to *Urvar AI Assistant*!
 
@@ -25,11 +27,13 @@ I'm your intelligent business assistant for *Urvar Natural Pvt. Ltd.* — powere
 ✍️ *Sales & Marketing* — product copy, social posts, emails, WhatsApp messages
 🔬 *R&D / Product Development* — formulations, new products, certifications
 🎯 *Lead Generation* — find distributors, agri-retailers, nurseries & cooperatives to pitch — with outreach messages
+📅 *Weekly Reports* — auto-sent every Monday at 9 AM | /report for instant briefing
 
 *Commands:*
 /start — Show this welcome message
 /help — Show available capabilities
 /clear — Reset conversation history
+/report — Generate an instant business intelligence report
 
 Just type your question and I'll route it to the right expert. Try:
 _"Write an Instagram post for our vermicompost product"_
@@ -55,12 +59,16 @@ Ask about: new product ideas, vermicompost formulations, NPK benchmarks, organic
 🎯 *Lead Generation Agent*
 Ask to: find distributors in a region, find nurseries or agri-retailers to pitch, discover Farmer Producer Organizations (FPOs), generate an outreach WhatsApp message or email for a lead type
 
+📅 *Weekly Business Report*
+/report — Instantly generate a market + competitive intelligence briefing
+Auto-sends to the team group every Monday at 9:00 AM IST
+
 *Tips:*
 • Be specific — "write an Instagram post for farmers in Bengal" works better than "write a post"
 • Ask follow-up questions — I remember context within the conversation
 • Use /clear to reset history and memory
 
-*Commands:* /start /help /clear`;
+*Commands:* /start /help /clear /report`;
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -77,6 +85,17 @@ bot.onText(/\/clear/, (msg) => {
   clearHistory(chatId);
   clearMemories(chatId);
   bot.sendMessage(chatId, "✅ Conversation history and memory cleared. Start fresh!", { parse_mode: "Markdown" });
+});
+
+bot.onText(/\/report/, async (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendChatAction(chatId, "typing");
+  const typingInterval = setInterval(() => bot.sendChatAction(chatId, "typing"), 4000);
+  try {
+    await sendWeeklyReport(bot, chatId);
+  } finally {
+    clearInterval(typingInterval);
+  }
 });
 
 bot.on("message", async (msg) => {
