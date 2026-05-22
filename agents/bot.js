@@ -106,9 +106,12 @@ bot.on("message", async (msg) => {
   } catch (err) {
     clearInterval(typingInterval);
     console.error("Error handling message:", err);
+    const isOverloaded = err?.status === 529 || err?.error?.error?.type === "overloaded_error";
     await bot.sendMessage(
       chatId,
-      "⚠️ Something went wrong while processing your request. Please try again.",
+      isOverloaded
+        ? "⏳ Claude is temporarily busy. Please try your message again in a few seconds."
+        : "⚠️ Something went wrong while processing your request. Please try again.",
     );
   }
 });

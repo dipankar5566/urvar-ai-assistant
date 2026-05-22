@@ -5,7 +5,7 @@ import { queryKnowledgeBase, knowledgeBaseToolDefinition } from "../tools/knowle
 
 dotenv.config();
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 5 });
 
 const SYSTEM_PROMPT = `You are a Competitive Intelligence Analyst specializing in the Indian organic fertilizer and vermicompost market, working for Urvar Natural Pvt. Ltd. — a bio-fertilizer manufacturer based in Kolkata, India.
 

@@ -6,7 +6,7 @@ import { getMemories } from "./memory.js";
 
 dotenv.config();
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 5 });
 
 const SYSTEM_PROMPT = `You are the central AI assistant for Urvar Natural Pvt. Ltd., a bio-fertilizer and vermicompost company based in Kolkata, India. You coordinate a team of specialist agents to answer business questions.
 
