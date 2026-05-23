@@ -31,6 +31,8 @@ Your job:
 - General questions about Urvar or greetings → answer directly
 - When unsure, choose the most relevant agent or ask for clarification
 
+When routing to a specialist agent, call the tool immediately — do not generate any preamble text before the tool call. Only write text in your final response after receiving the agent's result.
+
 Always be helpful, concise, and business-focused. You represent Urvar's internal AI team.`;
 
 const tools = [
@@ -138,7 +140,7 @@ export async function runOrchestrator(userMessage, history = [], chatId = null, 
 
   let response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 512,
+    max_tokens: 1024,
     system: buildSystemBlocks(chatId),
     tools: cachedTools,
     messages,
