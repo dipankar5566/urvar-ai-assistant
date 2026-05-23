@@ -1,7 +1,7 @@
 # Urvar Natural Pvt. Ltd. — Company Profile
 
 ## Overview
-- **Full Name:** M/S Urvar Natural Private Limited
+- **Full Name:** M/S. Urvar Natural Private Limited
 - **Founded:** 02 August 2023
 - **Registered Office:** Sewli, Telenipara, Bandipara, North 24 Parganas, Kolkata 700121, West Bengal, India
 - **Type:** Private Limited Company (Micro Enterprise)
