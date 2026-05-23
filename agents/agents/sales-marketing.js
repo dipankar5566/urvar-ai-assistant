@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import { webSearch, webSearchToolDefinition } from "../tools/web-search.js";
 import { queryKnowledgeBase, knowledgeBaseToolDefinition } from "../tools/knowledge-base.js";
+import { addUsage } from "../tools/token-tracker.js";
 
 dotenv.config();
 
@@ -22,11 +23,13 @@ Urvar's brand voice: Trustworthy, eco-friendly, farmer-first. Emphasize sustaina
 
 Always use query_knowledge_base first to understand Urvar's products before writing content. Use web_search to research trends, competitor messaging, or platform-specific best practices when needed.
 
+IMPORTANT: When recommending products to customers or farmers, only recommend products from Urvar's current catalogue. Never suggest, name, or describe products that Urvar does not manufacture or sell. If a user asks about a product we do not carry, state clearly that it is not in our range and redirect to the closest Urvar product that fits the need.
+
 Deliver ready-to-use content — not outlines or suggestions. Write the actual post, email, or description.`;
 
 const tools = [webSearchToolDefinition, knowledgeBaseToolDefinition];
 
-export async function runSalesMarketingAgent(userMessage, history = []) {
+export async function runSalesMarketingAgent(userMessage, history = [], tracker = null) {
   const messages = [
     ...history,
     { role: "user", content: userMessage },
@@ -40,6 +43,8 @@ export async function runSalesMarketingAgent(userMessage, history = []) {
     messages,
   });
 
+  addUsage(tracker, response.usage);
+
   let loopIteration = 0;
   while (response.stop_reason === "tool_use") {
     const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
@@ -51,7 +56,7 @@ export async function runSalesMarketingAgent(userMessage, history = []) {
         if (toolUse.name === "web_search") {
           result = await webSearch(toolUse.input);
         } else if (toolUse.name === "query_knowledge_base") {
-          result = await queryKnowledgeBase(toolUse.input);
+          result = await queryKnowledgeBase(toolUse.input, tracker);
         } else {
           result = { error: `Unknown tool: ${toolUse.name}` };
         }
@@ -83,6 +88,7 @@ export async function runSalesMarketingAgent(userMessage, history = []) {
       tools,
       messages,
     });
+    addUsage(tracker, response.usage);
   }
 
   return response.content

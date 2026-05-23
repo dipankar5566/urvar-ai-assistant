@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import { webSearch, webSearchToolDefinition } from "../tools/web-search.js";
 import { queryKnowledgeBase, knowledgeBaseToolDefinition } from "../tools/knowledge-base.js";
+import { addUsage } from "../tools/token-tracker.js";
 
 dotenv.config();
 
@@ -44,7 +45,7 @@ Always search for leads in the specific geography the user mentions. If no geogr
 
 const tools = [webSearchToolDefinition, knowledgeBaseToolDefinition];
 
-export async function runLeadGenerationAgent(userMessage, history = []) {
+export async function runLeadGenerationAgent(userMessage, history = [], tracker = null) {
   const messages = [
     ...history,
     { role: "user", content: userMessage },
@@ -58,6 +59,8 @@ export async function runLeadGenerationAgent(userMessage, history = []) {
     messages,
   });
 
+  addUsage(tracker, response.usage);
+
   let loopIteration = 0;
   while (response.stop_reason === "tool_use") {
     const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
@@ -69,7 +72,7 @@ export async function runLeadGenerationAgent(userMessage, history = []) {
         if (toolUse.name === "web_search") {
           result = await webSearch(toolUse.input);
         } else if (toolUse.name === "query_knowledge_base") {
-          result = await queryKnowledgeBase(toolUse.input);
+          result = await queryKnowledgeBase(toolUse.input, tracker);
         } else {
           result = { error: `Unknown tool: ${toolUse.name}` };
         }
@@ -101,6 +104,7 @@ export async function runLeadGenerationAgent(userMessage, history = []) {
       tools,
       messages,
     });
+    addUsage(tracker, response.usage);
   }
 
   return response.content

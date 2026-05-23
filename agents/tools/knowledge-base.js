@@ -1,78 +1,63 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import path from "path";
+import { addUsage } from "./token-tracker.js";
 
 dotenv.config();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const settingsPath = path.resolve(__dirname, "../../RAG/Open AI/settings.json");
+const docsDir = path.resolve(__dirname, "../../RAG/docs");
 
-let vectorStoreId = null;
-let cachedAssistantId = null;
+const DOC_FILES = [
+  "urvar-summary.md",
+  "company.md",
+  "products.md",
+  "customers.md",
+  "crop-guide.md",
+  "pricing.md",
+];
 
-async function getVectorStoreId() {
-  if (vectorStoreId) return vectorStoreId;
-  const raw = await readFile(settingsPath, "utf8");
-  const settings = JSON.parse(raw);
-  vectorStoreId = settings.vectorStoreId;
-  return vectorStoreId;
-}
+let cachedDocs = null;
 
-async function getOrCreateAssistant(storeId) {
-  if (cachedAssistantId) {
+async function loadDocs() {
+  if (cachedDocs) return cachedDocs;
+  const parts = [];
+  for (const filename of DOC_FILES) {
     try {
-      await openai.beta.assistants.retrieve(cachedAssistantId);
-      return cachedAssistantId;
-    } catch (err) {
-      if (err.status === 404) cachedAssistantId = null;
-      else throw err;
+      const content = await readFile(path.join(docsDir, filename), "utf8");
+      parts.push(`=== ${filename} ===\n${content}`);
+    } catch {
+      // skip missing files silently
     }
   }
-  const assistant = await openai.beta.assistants.create({
-    name: "Urvar Knowledge Retriever",
-    model: "gpt-4o-mini",
-    tools: [{ type: "file_search" }],
-    tool_resources: { file_search: { vector_store_ids: [storeId] } },
-  });
-  cachedAssistantId = assistant.id;
-  return cachedAssistantId;
+  cachedDocs = parts.join("\n\n");
+  return cachedDocs;
 }
 
-export async function queryKnowledgeBase({ query }) {
-  const storeId = await getVectorStoreId();
-  if (!storeId) throw new Error("vectorStoreId not found in settings.json");
+export async function queryKnowledgeBase({ query }, tracker = null) {
+  const docs = await loadDocs();
 
-  const assistantId = await getOrCreateAssistant(storeId);
-  let thread;
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 1024,
+    system: `You are a knowledge base assistant for Urvar Natural Pvt. Ltd. Answer questions strictly based on the company documents below. If the answer is not in the documents, say "No information found in the knowledge base."
 
-  try {
-    thread = await openai.beta.threads.create({
-      messages: [{ role: "user", content: query }],
-    });
+${docs}`,
+    messages: [{ role: "user", content: query }],
+  });
 
-    await openai.beta.threads.runs.createAndPoll(thread.id, {
-      assistant_id: assistantId,
-    });
+  addUsage(tracker, response.usage);
 
-    const messages = await openai.beta.threads.messages.list(thread.id);
-    const answer = messages.data
-      .filter((m) => m.role === "assistant")
-      .map((m) =>
-        m.content
-          .filter((c) => c.type === "text")
-          .map((c) => c.text?.value || "")
-          .join("")
-      )
-      .join("\n");
-
-    return answer || "No relevant information found in the knowledge base.";
-  } finally {
-    if (thread) await openai.beta.threads.del(thread.id);
-  }
+  return (
+    response.content
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("\n") || "No relevant information found in the knowledge base."
+  );
 }
 
 export const knowledgeBaseToolDefinition = {
@@ -84,7 +69,8 @@ export const knowledgeBaseToolDefinition = {
     properties: {
       query: {
         type: "string",
-        description: "The question or topic to look up in the company knowledge base.",
+        description:
+          "The question or topic to look up in the company knowledge base.",
       },
     },
     required: ["query"],

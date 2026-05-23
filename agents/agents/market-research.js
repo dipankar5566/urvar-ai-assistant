@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import { webSearch, webSearchToolDefinition } from "../tools/web-search.js";
 import { queryKnowledgeBase, knowledgeBaseToolDefinition } from "../tools/knowledge-base.js";
+import { addUsage } from "../tools/token-tracker.js";
 
 dotenv.config();
 
@@ -23,7 +24,7 @@ Format your responses clearly with sections, bullet points, and key takeaways wh
 
 const tools = [webSearchToolDefinition, knowledgeBaseToolDefinition];
 
-export async function runMarketResearchAgent(userMessage, history = []) {
+export async function runMarketResearchAgent(userMessage, history = [], tracker = null) {
   const messages = [
     ...history,
     { role: "user", content: userMessage },
@@ -37,6 +38,8 @@ export async function runMarketResearchAgent(userMessage, history = []) {
     messages,
   });
 
+  addUsage(tracker, response.usage);
+
   // Agentic loop — keep running until no more tool calls
   let loopIteration = 0;
   while (response.stop_reason === "tool_use") {
@@ -49,7 +52,7 @@ export async function runMarketResearchAgent(userMessage, history = []) {
         if (toolUse.name === "web_search") {
           result = await webSearch(toolUse.input);
         } else if (toolUse.name === "query_knowledge_base") {
-          result = await queryKnowledgeBase(toolUse.input);
+          result = await queryKnowledgeBase(toolUse.input, tracker);
         } else {
           result = { error: `Unknown tool: ${toolUse.name}` };
         }
@@ -81,6 +84,7 @@ export async function runMarketResearchAgent(userMessage, history = []) {
       tools,
       messages,
     });
+    addUsage(tracker, response.usage);
   }
 
   const text = response.content

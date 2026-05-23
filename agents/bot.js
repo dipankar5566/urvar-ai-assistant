@@ -1,6 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
 import { runOrchestrator } from "./orchestrator.js";
+import { createTracker, formatSummary } from "./tools/token-tracker.js";
 import { getHistory, saveHistory, clearHistory } from "./db.js";
 import { extractAndSaveMemories, clearMemories } from "./memory.js";
 import { startScheduler, sendWeeklyReport } from "./scheduler.js";
@@ -112,9 +113,10 @@ bot.on("message", async (msg) => {
   const history = getHistory(chatId);
 
   try {
-    const reply = await runOrchestrator(text, history, chatId);
+    const tracker = createTracker();
+    const reply = await runOrchestrator(text, history, chatId, tracker);
 
-    // Update history with this exchange
+    // Update history with this exchange (without token summary)
     history.push({ role: "user", content: text });
     history.push({ role: "assistant", content: reply });
 
@@ -131,11 +133,14 @@ bot.on("message", async (msg) => {
 
     clearInterval(typingInterval);
 
+    // Append token usage summary before sending (not stored in history)
+    const replyWithUsage = reply + formatSummary(tracker);
+
     // Telegram max message length is 4096 chars — split if needed
-    if (reply.length <= 4096) {
-      await bot.sendMessage(chatId, reply, { parse_mode: "Markdown" });
+    if (replyWithUsage.length <= 4096) {
+      await bot.sendMessage(chatId, replyWithUsage, { parse_mode: "Markdown" });
     } else {
-      const chunks = splitMessage(reply, 4096);
+      const chunks = splitMessage(replyWithUsage, 4096);
       for (const chunk of chunks) {
         await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
       }

@@ -6,6 +6,7 @@ import { runSalesMarketingAgent } from "./agents/sales-marketing.js";
 import { runRdProductAgent } from "./agents/rd-product.js";
 import { runLeadGenerationAgent } from "./agents/lead-generation.js";
 import { getMemories } from "./memory.js";
+import { addUsage } from "./tools/token-tracker.js";
 
 dotenv.config();
 
@@ -24,7 +25,8 @@ Your job:
 - Market size, trends, demand, customer segments → call_market_research_agent
 - Competitors, pricing comparison, brand benchmarking → call_competitive_analysis_agent
 - Content creation, marketing copy, social posts, emails, customer replies → call_sales_marketing_agent
-- Formulations, new products, certifications, agronomic research → call_rd_product_agent
+- Customer questions about which Urvar products to use, crop-specific product advice, dosage questions, farmer product queries → call_sales_marketing_agent
+- New product R&D, formulation research, certifications, agronomic science literature, production improvements → call_rd_product_agent
 - Finding distributors, retailers, nurseries, cooperatives, FPOs, or any sales leads → call_lead_generation_agent
 - General questions about Urvar or greetings → answer directly
 - When unsure, choose the most relevant agent or ask for clarification
@@ -128,7 +130,7 @@ function buildSystemBlocks(chatId) {
   return [base, { type: "text", text: memoryText }];
 }
 
-export async function runOrchestrator(userMessage, history = [], chatId = null) {
+export async function runOrchestrator(userMessage, history = [], chatId = null, tracker = null) {
   const messages = [
     ...history,
     { role: "user", content: userMessage },
@@ -142,6 +144,8 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
     messages,
   });
 
+  addUsage(tracker, response.usage);
+
   // Handle agent delegation
   while (response.stop_reason === "tool_use") {
     const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
@@ -151,15 +155,15 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
       let result;
       try {
         if (toolUse.name === "call_market_research_agent") {
-          result = await runMarketResearchAgent(toolUse.input.query, []);
+          result = await runMarketResearchAgent(toolUse.input.query, [], tracker);
         } else if (toolUse.name === "call_competitive_analysis_agent") {
-          result = await runCompetitiveAnalysisAgent(toolUse.input.query, []);
+          result = await runCompetitiveAnalysisAgent(toolUse.input.query, [], tracker);
         } else if (toolUse.name === "call_sales_marketing_agent") {
-          result = await runSalesMarketingAgent(toolUse.input.query, []);
+          result = await runSalesMarketingAgent(toolUse.input.query, [], tracker);
         } else if (toolUse.name === "call_rd_product_agent") {
-          result = await runRdProductAgent(toolUse.input.query, []);
+          result = await runRdProductAgent(toolUse.input.query, [], tracker);
         } else if (toolUse.name === "call_lead_generation_agent") {
-          result = await runLeadGenerationAgent(toolUse.input.query, []);
+          result = await runLeadGenerationAgent(toolUse.input.query, [], tracker);
         } else {
           result = `Unknown agent: ${toolUse.name}`;
         }
@@ -184,6 +188,7 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
       tools: cachedTools,
       messages,
     });
+    addUsage(tracker, response.usage);
   }
 
   const text = response.content
