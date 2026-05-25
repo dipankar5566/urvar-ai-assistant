@@ -26,6 +26,15 @@ urvar-ai-assistant/
 │   ├── ecosystem.config.cjs   ← PM2 config (update OS paths before deploying)
 │   ├── .env.example
 │   └── package.json
+├── .claude/
+│   └── commands/              ← Claude Code slash commands (invoke with / in chat)
+│       ├── urvar-product-advisor.md   ← Product catalogue, crop guide, guardrail
+│       ├── agent-routing.md           ← Data flow, routing table, per-agent behaviour
+│       ├── add-agent.md               ← Scaffolding checklist for new specialists
+│       ├── update-knowledge-base.md   ← Re-indexing workflow
+│       ├── debug-bot.md               ← Runtime error diagnosis and PM2 commands
+│       ├── deploy.md                  ← End-to-end deployment checklist
+│       └── optimize-costs.md          ← Token footer, caching strategy, cost hotspots
 └── RAG/
     ├── docs/                  ← Knowledge base source files — edit these to update bot knowledge
     │   ├── company.md
@@ -189,6 +198,22 @@ The RAG package (`RAG/Open AI/`) has its own `.env.example` with only `OPENAI_AP
 | `claude-sonnet-4-6` | `orchestrator.js` + all 5 agents | Routing, reasoning, content generation |
 | `claude-haiku-4-5-20251001` | `memory.js` | Cheap fact extraction from conversation turns |
 | `gpt-4o-mini` | `tools/knowledge-base.js` | RAG retrieval from OpenAI vector store |
+
+---
+
+## Slash Commands (Skills)
+
+Seven Claude Code slash commands live in `.claude/commands/`. Type `/` in Claude Code chat to invoke any of them.
+
+| Command | Use it when |
+|---------|-------------|
+| `/urvar-product-advisor` | Answering product questions, dosage, crop advice, or writing farmer-facing content |
+| `/agent-routing` | Debugging routing decisions or understanding which agent handles what |
+| `/add-agent` | Scaffolding a new specialist agent end-to-end |
+| `/update-knowledge-base` | Editing `RAG/docs/` and re-indexing the OpenAI vector store |
+| `/debug-bot` | Bot is down, returning errors, or PM2 keeps restarting |
+| `/deploy` | Deploying to a new machine or setting up PM2 from scratch |
+| `/optimize-costs` | Token costs are high, cache hit rate is low, or reading the token footer |
 
 ---
 
