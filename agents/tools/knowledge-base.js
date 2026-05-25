@@ -21,7 +21,7 @@ async function getVectorStoreId() {
   return vectorStoreId;
 }
 
-export async function queryKnowledgeBase({ query }) {
+export async function queryKnowledgeBase({ query }, tracker = null) {
   const storeId = await getVectorStoreId();
   if (!storeId) throw new Error("vectorStoreId not found in settings.json");
 

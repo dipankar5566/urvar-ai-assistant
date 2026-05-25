@@ -1,8 +1,10 @@
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
 import { runOrchestrator } from "./orchestrator.js";
+import { createTracker, formatSummary } from "./tools/token-tracker.js";
 import { getHistory, saveHistory, clearHistory } from "./db.js";
 import { extractAndSaveMemories, clearMemories } from "./memory.js";
+import { startScheduler, sendWeeklyReport } from "./scheduler.js";
 
 dotenv.config();
 
@@ -13,6 +15,8 @@ if (!TOKEN) {
 }
 
 const bot = new TelegramBot(TOKEN, { polling: true });
+const turnCounters = new Map();
+startScheduler(bot);
 
 const WELCOME_MESSAGE = `👋 Welcome to *Urvar AI Assistant*!
 
@@ -23,11 +27,14 @@ I'm your intelligent business assistant for *Urvar Natural Pvt. Ltd.* — powere
 🔍 *Competitive Analysis* — competitor benchmarking, positioning, opportunities
 ✍️ *Sales & Marketing* — product copy, social posts, emails, WhatsApp messages
 🔬 *R&D / Product Development* — formulations, new products, certifications
+🎯 *Lead Generation* — find distributors, agri-retailers, nurseries & cooperatives to pitch — with outreach messages
+📅 *Weekly Reports* — auto-sent every Monday at 9 AM | /report for instant briefing
 
 *Commands:*
 /start — Show this welcome message
 /help — Show available capabilities
 /clear — Reset conversation history
+/report — Generate an instant business intelligence report
 
 Just type your question and I'll route it to the right expert. Try:
 _"Write an Instagram post for our vermicompost product"_
@@ -50,12 +57,19 @@ Ask to: write product descriptions, Instagram/Facebook posts, WhatsApp messages,
 🔬 *R&D / Product Development Agent*
 Ask about: new product ideas, vermicompost formulations, NPK benchmarks, organic certifications (PGS-India, NPOP), crop-specific application rates, production improvements
 
+🎯 *Lead Generation Agent*
+Ask to: find distributors in a region, find nurseries or agri-retailers to pitch, discover Farmer Producer Organizations (FPOs), generate an outreach WhatsApp message or email for a lead type
+
+📅 *Weekly Business Report*
+/report — Instantly generate a market + competitive intelligence briefing
+Auto-sends to the team group every Monday at 9:00 AM IST
+
 *Tips:*
 • Be specific — "write an Instagram post for farmers in Bengal" works better than "write a post"
 • Ask follow-up questions — I remember context within the conversation
 • Use /clear to reset history and memory
 
-*Commands:* /start /help /clear`;
+*Commands:* /start /help /clear /report`;
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -74,6 +88,17 @@ bot.onText(/\/clear/, (msg) => {
   bot.sendMessage(chatId, "✅ Conversation history and memory cleared. Start fresh!", { parse_mode: "Markdown" });
 });
 
+bot.onText(/\/report/, async (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendChatAction(chatId, "typing");
+  const typingInterval = setInterval(() => bot.sendChatAction(chatId, "typing"), 4000);
+  try {
+    await sendWeeklyReport(bot, chatId);
+  } finally {
+    clearInterval(typingInterval);
+  }
+});
+
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
@@ -88,9 +113,10 @@ bot.on("message", async (msg) => {
   const history = getHistory(chatId);
 
   try {
-    const reply = await runOrchestrator(text, history, chatId);
+    const tracker = createTracker();
+    const reply = await runOrchestrator(text, history, chatId, tracker);
 
-    // Update history with this exchange
+    // Update history with this exchange (without token summary)
     history.push({ role: "user", content: text });
     history.push({ role: "assistant", content: reply });
 
@@ -98,16 +124,23 @@ bot.on("message", async (msg) => {
     if (history.length > 20) history.splice(0, history.length - 20);
     saveHistory(chatId, history);
 
-    // Extract and save memorable facts in the background (non-blocking)
-    extractAndSaveMemories(chatId, text, reply).catch(() => {});
+    // Extract memorable facts every 3 turns (non-blocking)
+    const turnCount = (turnCounters.get(chatId) || 0) + 1;
+    turnCounters.set(chatId, turnCount);
+    if (turnCount % 3 === 0) {
+      extractAndSaveMemories(chatId, text, reply).catch(() => {});
+    }
 
     clearInterval(typingInterval);
 
+    // Append token usage summary before sending (not stored in history)
+    const replyWithUsage = reply + formatSummary(tracker);
+
     // Telegram max message length is 4096 chars — split if needed
-    if (reply.length <= 4096) {
-      await bot.sendMessage(chatId, reply, { parse_mode: "Markdown" });
+    if (replyWithUsage.length <= 4096) {
+      await bot.sendMessage(chatId, replyWithUsage, { parse_mode: "Markdown" });
     } else {
-      const chunks = splitMessage(reply, 4096);
+      const chunks = splitMessage(replyWithUsage, 4096);
       for (const chunk of chunks) {
         await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
       }

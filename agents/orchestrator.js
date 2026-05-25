@@ -4,7 +4,9 @@ import { runMarketResearchAgent } from "./agents/market-research.js";
 import { runCompetitiveAnalysisAgent } from "./agents/competitive-analysis.js";
 import { runSalesMarketingAgent } from "./agents/sales-marketing.js";
 import { runRdProductAgent } from "./agents/rd-product.js";
+import { runLeadGenerationAgent } from "./agents/lead-generation.js";
 import { getMemories } from "./memory.js";
+import { addUsage } from "./tools/token-tracker.js";
 
 dotenv.config();
 
@@ -17,14 +19,19 @@ Available specialist agents:
 2. **Competitive Analysis Agent** — competitors, competitor products/pricing, market positioning, competitive gaps, benchmarking against other vermicompost brands.
 3. **Sales & Marketing Agent** — product descriptions, social media posts, WhatsApp messages, email campaigns, customer query responses, promotional strategies.
 4. **R&D / Product Development Agent** — formulation research, agronomic data, new product ideas, certifications, production improvements, scientific literature on bio-fertilizers.
+5. **Lead Generation Agent** — finding B2B leads: distributors, agri-retailers, nurseries, garden centers, cooperatives, and Farmer Producer Organizations (FPOs) who could stock or resell Urvar products. Also drafts outreach messages.
 
 Your job:
 - Market size, trends, demand, customer segments → call_market_research_agent
 - Competitors, pricing comparison, brand benchmarking → call_competitive_analysis_agent
 - Content creation, marketing copy, social posts, emails, customer replies → call_sales_marketing_agent
-- Formulations, new products, certifications, agronomic research → call_rd_product_agent
+- Customer questions about which Urvar products to use, crop-specific product advice, dosage questions, farmer product queries → call_sales_marketing_agent
+- New product R&D, formulation research, certifications, agronomic science literature, production improvements → call_rd_product_agent
+- Finding distributors, retailers, nurseries, cooperatives, FPOs, or any sales leads → call_lead_generation_agent
 - General questions about Urvar or greetings → answer directly
 - When unsure, choose the most relevant agent or ask for clarification
+
+When routing to a specialist agent, call the tool immediately — do not generate any preamble text before the tool call. Only write text in your final response after receiving the agent's result.
 
 Always be helpful, concise, and business-focused. You represent Urvar's internal AI team.`;
 
@@ -89,19 +96,43 @@ const tools = [
       required: ["query"],
     },
   },
+  {
+    name: "call_lead_generation_agent",
+    description:
+      "Delegate to the Lead Generation specialist agent. Use for finding potential B2B customers: distributors, agri-retailers, nurseries, garden centers, cooperatives, and Farmer Producer Organizations (FPOs) who could stock or resell Urvar products. Use when the user asks to find leads, generate a prospect list, or draft outreach messages for sales targets.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "The lead generation request, including the type of business to find and the target geography.",
+        },
+      },
+      required: ["query"],
+    },
+  },
 ];
 
-export async function runOrchestrator(userMessage, history = [], chatId = null) {
-  // Build system prompt with long-term memories if available
-  let systemPrompt = SYSTEM_PROMPT;
-  if (chatId) {
-    const memories = getMemories(chatId);
-    if (memories.length > 0) {
-      const memoryText = memories.map((m) => `- ${m.fact}`).join("\n");
-      systemPrompt += `\n\n## What you remember about this business (from past conversations):\n${memoryText}\n\nUse these facts to give more relevant, contextual answers.`;
-    }
-  }
+const cachedTools = tools.map((t, i) =>
+  i === tools.length - 1 ? { ...t, cache_control: { type: "ephemeral" } } : t
+);
 
+function buildSystemBlocks(chatId) {
+  const base = {
+    type: "text",
+    text: SYSTEM_PROMPT,
+    cache_control: { type: "ephemeral" },
+  };
+  const memories = chatId ? getMemories(chatId) : [];
+  if (memories.length === 0) return [base];
+  const memoryText =
+    "\n\n## What you remember about this business (from past conversations):\n" +
+    memories.map((m) => `- ${m.fact}`).join("\n") +
+    "\n\nUse these facts to give more relevant, contextual answers.";
+  return [base, { type: "text", text: memoryText }];
+}
+
+export async function runOrchestrator(userMessage, history = [], chatId = null, tracker = null) {
   const messages = [
     ...history,
     { role: "user", content: userMessage },
@@ -109,11 +140,13 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
 
   let response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 512,
-    system: systemPrompt,
-    tools,
+    max_tokens: 1024,
+    system: buildSystemBlocks(chatId),
+    tools: cachedTools,
     messages,
   });
+
+  addUsage(tracker, response.usage);
 
   // Handle agent delegation
   while (response.stop_reason === "tool_use") {
@@ -124,13 +157,15 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
       let result;
       try {
         if (toolUse.name === "call_market_research_agent") {
-          result = await runMarketResearchAgent(toolUse.input.query, []);
+          result = await runMarketResearchAgent(toolUse.input.query, [], tracker);
         } else if (toolUse.name === "call_competitive_analysis_agent") {
-          result = await runCompetitiveAnalysisAgent(toolUse.input.query, []);
+          result = await runCompetitiveAnalysisAgent(toolUse.input.query, [], tracker);
         } else if (toolUse.name === "call_sales_marketing_agent") {
-          result = await runSalesMarketingAgent(toolUse.input.query, []);
+          result = await runSalesMarketingAgent(toolUse.input.query, [], tracker);
         } else if (toolUse.name === "call_rd_product_agent") {
-          result = await runRdProductAgent(toolUse.input.query, []);
+          result = await runRdProductAgent(toolUse.input.query, [], tracker);
+        } else if (toolUse.name === "call_lead_generation_agent") {
+          result = await runLeadGenerationAgent(toolUse.input.query, [], tracker);
         } else {
           result = `Unknown agent: ${toolUse.name}`;
         }
@@ -151,10 +186,11 @@ export async function runOrchestrator(userMessage, history = [], chatId = null) 
     response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
-      system: systemPrompt,
-      tools,
+      system: buildSystemBlocks(chatId),
+      tools: cachedTools,
       messages,
     });
+    addUsage(tracker, response.usage);
   }
 
   const text = response.content
