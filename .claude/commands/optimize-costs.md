@@ -66,6 +66,7 @@ Cache TTL is approximately **5 minutes**. After that, the next call pays full in
 
 | Operation | Cost driver | Frequency |
 |-----------|------------|-----------|
+| `lead-generation` queries | Spawns `sales-marketing` as a subagent after finding leads — runs two full agentic loops (its own + the subagent's). `sales-marketing` also runs its KB pre-fetch (3 OpenAI calls). Expect ~2× typical agent cost. | Every lead-gen query |
 | KB pre-fetch in `sales-marketing` / `rd-product` | 3 OpenAI API calls per query: `assistants.create` → `threads.runs.createAndPoll` → `assistants.del` | Every query to either agent |
 | `query_knowledge_base` tool call inside agentic loop | Same 3-call pattern — a fresh temporary assistant each time | Every time the agent decides to call KB |
 | Long conversation history | `in` tokens grow with each turn (history capped at 20 msgs in `db.js`) | Gets expensive in long sessions |
@@ -116,7 +117,7 @@ These agents query the KB once before the agentic loop to fetch the product cata
 
 **Edge case:** "Costs spiked this week even though usage looks the same"
 
-**Expected:** Check if `scheduler.js` ran successfully (weekly reports cost is invisible in footers). Also check if any queries went to `sales-marketing` or `rd-product` heavily — those agents each run 3+ OpenAI calls per query due to the KB pre-fetch.
+**Expected:** Check if `scheduler.js` ran successfully (weekly reports cost is invisible in footers). Also check if any queries went to `lead-generation` — each lead-gen query spawns a full `sales-marketing` subagent run, roughly doubling the per-query cost. Also check `sales-marketing` and `rd-product` traffic — those each run 3+ OpenAI calls per query due to the KB pre-fetch.
 
 ---
 
@@ -136,6 +137,7 @@ These agents query the KB once before the agentic loop to fetch the product cata
 - `agents/tools/token-tracker.js` — `formatSummary()` output format, 4 tracked fields
 - `agents/tools/knowledge-base.js` — 3-call-per-query pattern, no `maxRetries` on OpenAI client
 - `agents/orchestrator.js:116-118,120-133` — caching implementation
+- `agents/agents/lead-generation.js:109-122` — subagent spawn pattern (calls `runSalesMarketingAgent` after loop)
 - `agents/agents/sales-marketing.js:38-51` — KB pre-fetch pattern
 - `agents/agents/rd-product.js:38-50` — KB pre-fetch pattern
 - `agents/scheduler.js:40-43` — `Promise.all()` without tracker

@@ -63,7 +63,7 @@ tools/
 | Social posts, emails, WhatsApp copy, product descriptions | `sales-marketing` |
 | Farmer product Q&A, crop advice, dosage questions | `sales-marketing` |
 | New products, R&D, formulations, certifications, agronomic science | `rd-product` |
-| Finding distributors, retailers, nurseries, FPOs, outreach drafts | `lead-generation` |
+| Finding distributors, retailers, nurseries, FPOs — prospect lists + outreach copy | `lead-generation` (two-phase: finds leads then spawns `sales-marketing` subagent for outreach) |
 | Greetings, direct Urvar facts ("What is Urvar?") | orchestrator answers directly — no tool call |
 
 ---
@@ -76,11 +76,11 @@ tools/
 | `competitive-analysis` | No | `web_search` first |
 | `sales-marketing` | **Yes** — injects catalogue into system prompt before loop | `web_search` or KB as needed |
 | `rd-product` | **Yes** — injects catalogue into system prompt before loop | `web_search` + KB |
-| `lead-generation` | No | `query_knowledge_base` **first**, then `web_search` |
+| `lead-generation` | No | `query_knowledge_base` **first**, then `web_search`. After the loop, internally spawns `runSalesMarketingAgent` as a subagent to write the outreach copy. |
 
 `sales-marketing` and `rd-product` pre-fetch the product catalogue from the KB before starting the agentic loop and inject it as a hardcoded fallback if the KB query fails. This enforces the product guardrail.
 
-`lead-generation` system prompt explicitly says "Use query_knowledge_base FIRST to understand Urvar's product range and unique selling points" before any web search.
+`lead-generation` system prompt explicitly says "Use query_knowledge_base FIRST to understand Urvar's product range and unique selling points" before any web search. It is the **only agent that spawns another agent** — after its own agentic loop finishes, it calls `runSalesMarketingAgent` to write outreach copy, then returns a combined response. Expect ~2× the token cost of a typical agent call.
 
 ---
 

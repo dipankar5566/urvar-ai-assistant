@@ -15,7 +15,7 @@ urvar-ai-assistant/
 │   │   ├── competitive-analysis.js
 │   │   ├── sales-marketing.js
 │   │   ├── rd-product.js
-│   │   └── lead-generation.js
+│   │   └── lead-generation.js     ← finds B2B prospects; spawns sales-marketing subagent for outreach copy
 │   ├── tools/                 ← Shared tool modules
 │   │   ├── web-search.js      ← Tavily API wrapper (15s timeout)
 │   │   ├── knowledge-base.js  ← OpenAI vector store query (file_search)
@@ -73,7 +73,7 @@ tools/*.js        (Tavily web search  |  OpenAI RAG knowledge base)
 
 ### Rules
 
-**Routing**: The orchestrator receives every user message. It uses `claude-sonnet-4-6` with 5 tool definitions (one per specialist) to decide who handles it. If the query is a simple greeting or direct question about Urvar, the orchestrator answers without calling a specialist. Never call a specialist agent directly from `bot.js`.
+**Routing**: The orchestrator receives every user message. It uses `claude-sonnet-4-6` with 5 tool definitions (one per specialist) to decide who handles it. If the query is a simple greeting or direct question about Urvar, the orchestrator answers without calling a specialist. Never call a specialist agent directly from `bot.js`. Agents may call other agents internally as subagents (e.g. `lead-generation.js` spawns `runSalesMarketingAgent` after finding leads).
 
 **Agentic loops**: Every specialist agent loops `while (response.stop_reason === "tool_use")`, appending tool results and re-submitting to the API. Do not break this loop early or short-circuit it with a turn cap.
 

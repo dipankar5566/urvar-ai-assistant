@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { webSearch, webSearchToolDefinition } from "../tools/web-search.js";
 import { queryKnowledgeBase, knowledgeBaseToolDefinition } from "../tools/knowledge-base.js";
 import { addUsage } from "../tools/token-tracker.js";
+import { runSalesMarketingAgent } from "./sales-marketing.js";
 
 dotenv.config();
 
@@ -30,7 +31,7 @@ Search strategy — use these sources for best results:
 For each search:
 1. Use query_knowledge_base FIRST to understand Urvar's product range and unique selling points
 2. Use web_search (multiple times with different queries) to find real businesses with name, location, and contact details
-3. Return a structured lead list followed by a ready-to-send outreach message template
+3. Return a structured lead list only. Do not write outreach messages.
 
 Lead list format:
 - Business Name
@@ -38,8 +39,6 @@ Lead list format:
 - Location (city, district, state)
 - Contact (phone / email / website if found)
 - Why they're a good fit (1 line)
-
-After the list, write one personalized outreach message (WhatsApp or email) the team can send to this category of lead. Keep it concise, farmer-friendly, and focused on product benefits and margin opportunity for the reseller.
 
 Always search for leads in the specific geography the user mentions. If no geography is specified, default to West Bengal.`;
 
@@ -107,8 +106,18 @@ export async function runLeadGenerationAgent(userMessage, history = [], tracker 
     addUsage(tracker, response.usage);
   }
 
-  return response.content
+  const leadList = response.content
     .filter((b) => b.type === "text")
     .map((b) => b.text)
     .join("\n");
+
+  const outreachPrompt =
+    `I have just found the following leads for Urvar Natural:\n\n${leadList}\n\n` +
+    `Write ONE concise WhatsApp or email outreach message the Urvar sales team can ` +
+    `send to this category of prospect. Focus on product benefits and margin opportunity ` +
+    `for the reseller. Use Urvar brand voice (trustworthy, eco-friendly, farmer-first).`;
+
+  const outreachCopy = await runSalesMarketingAgent(outreachPrompt, [], tracker);
+
+  return `${leadList}\n\n---\n\n## Outreach Template\n\n${outreachCopy}`;
 }
