@@ -27,6 +27,10 @@ urvar-ai-assistant/
 │   ├── .env.example
 │   └── package.json
 ├── .claude/
+│   ├── settings.json          ← Hook configuration (syntax check + credential guard)
+│   ├── hooks/                 ← Hook scripts
+│   │   ├── check-syntax.sh    ← node --check after JS edits
+│   │   └── guard-credentials.sh ← blocks git commit if API keys detected
 │   └── commands/              ← Claude Code slash commands (invoke with / in chat)
 │       ├── urvar-product-advisor.md   ← Product catalogue, crop guide, guardrail
 │       ├── agent-routing.md           ← Data flow, routing table, per-agent behaviour
@@ -214,6 +218,19 @@ Seven Claude Code slash commands live in `.claude/commands/`. Type `/` in Claude
 | `/debug-bot` | Bot is down, returning errors, or PM2 keeps restarting |
 | `/deploy` | Deploying to a new machine or setting up PM2 from scratch |
 | `/optimize-costs` | Token costs are high, cache hit rate is low, or reading the token footer |
+
+---
+
+## Hooks
+
+Two Claude Code hooks run automatically during sessions (configured in `.claude/settings.json`):
+
+| Event | Trigger | What it does |
+|-------|---------|-------------|
+| `PostToolUse` | `Edit` or `Write` on a `.js` file | Runs `node --check` — exits non-zero if syntax is invalid so Claude self-corrects |
+| `PreToolUse` | `Bash` command containing `git commit` | Scans staged diff for credential patterns (Tavily, Telegram, Anthropic, OpenAI keys) — blocks commit if found |
+
+Both hooks fail open (exit 0) if `jq` is not installed. Install via `brew install jq`.
 
 ---
 
