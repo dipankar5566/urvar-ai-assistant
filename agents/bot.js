@@ -5,6 +5,7 @@ import { createTracker, formatSummary } from "./tools/token-tracker.js";
 import { getHistory, saveHistory, clearHistory } from "./db.js";
 import { extractAndSaveMemories, clearMemories } from "./memory.js";
 import { startScheduler, sendWeeklyReport } from "./scheduler.js";
+import { runCropDoctorAgent } from "./agents/crop-doctor.js";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ if (!TOKEN) {
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 const turnCounters = new Map();
+const mediaGroupBuffer = new Map();
 startScheduler(bot);
 
 const WELCOME_MESSAGE = `👋 Welcome to *Urvar AI Assistant*!
@@ -28,6 +30,7 @@ I'm your intelligent business assistant for *Urvar Natural Pvt. Ltd.* — powere
 ✍️ *Sales & Marketing* — product copy, social posts, emails, WhatsApp messages
 🔬 *R&D / Product Development* — formulations, new products, certifications
 🎯 *Lead Generation* — find distributors, agri-retailers, nurseries & cooperatives to pitch — with outreach messages
+📸 *Crop Doctor* — send a photo of diseased crops or soil for instant diagnosis & product recommendation
 📅 *Weekly Reports* — auto-sent every Monday at 9 AM | /report for instant briefing
 
 *Commands:*
@@ -61,6 +64,9 @@ Ask about: new product ideas, vermicompost formulations, NPK benchmarks, organic
 🎯 *Lead Generation Agent*
 Ask to: find distributors in a region, find nurseries or agri-retailers to pitch, discover Farmer Producer Organizations (FPOs), generate an outreach WhatsApp message or email for a lead type
 
+📸 *Crop Doctor*
+Send a photo of: diseased leaves, wilting plants, yellowing crops, or soil — get an instant diagnosis and the specific Urvar product + dosage to fix it
+
 📅 *Weekly Business Report*
 /report — Instantly generate a market + competitive intelligence briefing
 Auto-sends to the team group every Monday at 9:00 AM IST
@@ -69,6 +75,7 @@ Auto-sends to the team group every Monday at 9:00 AM IST
 • Be specific — "write an Instagram post for farmers in Bengal" works better than "write a post"
 • Ask follow-up questions — I remember context within the conversation
 • Use /clear to reset history and memory
+• Send a photo of a sick plant or soil for instant visual diagnosis
 
 *Commands:* /start /help /clear /report /ping`;
 
@@ -102,6 +109,75 @@ bot.onText(/\/ping/, (msg) => {
     { parse_mode: "Markdown" }
   );
 });
+
+bot.on("photo", async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (msg.media_group_id) {
+    const groupId = msg.media_group_id;
+    if (!mediaGroupBuffer.has(groupId)) {
+      mediaGroupBuffer.set(groupId, { photos: [], chatId, caption: "", timer: null });
+    }
+    const group = mediaGroupBuffer.get(groupId);
+    if (group.photos.length < 3) group.photos.push(msg.photo[msg.photo.length - 1]);
+    if (msg.caption) group.caption = msg.caption;
+
+    if (group.timer) clearTimeout(group.timer);
+    group.timer = setTimeout(() => {
+      mediaGroupBuffer.delete(groupId);
+      processCropPhotos(chatId, group.caption, group.photos);
+    }, 1500);
+  } else {
+    processCropPhotos(chatId, msg.caption || "", [msg.photo[msg.photo.length - 1]]);
+  }
+});
+
+async function processCropPhotos(chatId, caption, photos) {
+  bot.sendChatAction(chatId, "typing");
+  const typingInterval = setInterval(() => bot.sendChatAction(chatId, "typing"), 4000);
+
+  try {
+    const imageDataArray = await Promise.all(
+      photos.map(async (photo) => {
+        const fileLink = await bot.getFileLink(photo.file_id);
+        const resp = await fetch(fileLink);
+        if (!resp.ok) throw new Error(`Failed to download image: ${resp.status}`);
+        return Buffer.from(await resp.arrayBuffer()).toString("base64");
+      })
+    );
+
+    const history = getHistory(chatId);
+    const tracker = createTracker();
+    const reply = await runCropDoctorAgent(caption, history, tracker, imageDataArray, "image/jpeg");
+
+    history.push({ role: "user", content: `[Sent ${photos.length} photo(s)${caption ? `: "${caption}"` : ""}]` });
+    history.push({ role: "assistant", content: reply });
+    if (history.length > 20) history.splice(0, history.length - 20);
+    saveHistory(chatId, history);
+
+    clearInterval(typingInterval);
+
+    const replyWithUsage = reply + formatSummary(tracker);
+    if (replyWithUsage.length <= 4096) {
+      await bot.sendMessage(chatId, replyWithUsage, { parse_mode: "Markdown" });
+    } else {
+      const chunks = splitMessage(replyWithUsage, 4096);
+      for (const chunk of chunks) {
+        await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
+      }
+    }
+  } catch (err) {
+    clearInterval(typingInterval);
+    console.error("Error handling photo:", err);
+    const isOverloaded = err?.status === 529 || err?.error?.error?.type === "overloaded_error";
+    await bot.sendMessage(
+      chatId,
+      isOverloaded
+        ? "⏳ Claude is temporarily busy. Please try your message again in a few seconds."
+        : "⚠️ Could not analyze the image. Please try again or describe the problem in text.",
+    );
+  }
+}
 
 bot.onText(/\/report/, async (msg) => {
   const chatId = msg.chat.id;

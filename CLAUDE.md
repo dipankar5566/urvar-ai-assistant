@@ -10,12 +10,13 @@ urvar-ai-assistant/
 │   ├── scheduler.js           ← node-cron weekly report (Mon 9 AM IST)
 │   ├── memory.js              ← Long-term fact extraction per chat (Claude Haiku)
 │   ├── db.js                  ← Per-chat conversation history (JSON file store)
-│   ├── agents/                ← Five specialist agents (each: agentic loop + 2 tools)
+│   ├── agents/                ← Six specialist agents (each: agentic loop + 2 tools)
 │   │   ├── market-research.js
 │   │   ├── competitive-analysis.js
 │   │   ├── sales-marketing.js
 │   │   ├── rd-product.js
-│   │   └── lead-generation.js     ← finds B2B prospects; spawns sales-marketing subagent for outreach copy
+│   │   ├── lead-generation.js     ← finds B2B prospects; spawns sales-marketing subagent for outreach copy
+│   │   └── crop-doctor.js         ← photo-based crop disease diagnosis; called directly from bot.js (bypasses orchestrator)
 │   ├── tools/                 ← Shared tool modules
 │   │   ├── web-search.js      ← Tavily API wrapper (15s timeout)
 │   │   ├── knowledge-base.js  ← OpenAI vector store query (file_search)
@@ -66,7 +67,7 @@ Telegram user
      ↓
 orchestrator.js   (Claude Sonnet with tool_use — routes to one specialist per query)
      ↓
-agents/*.js       (five specialists — each runs an agentic loop with web_search + query_knowledge_base)
+agents/*.js       (six specialists — each runs an agentic loop with web_search + query_knowledge_base; crop-doctor also accepts image data)
      ↓
 tools/*.js        (Tavily web search  |  OpenAI RAG knowledge base)
 ```
