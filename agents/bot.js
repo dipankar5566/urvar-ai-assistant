@@ -35,6 +35,7 @@ I'm your intelligent business assistant for *Urvar Natural Pvt. Ltd.* — powere
 /help — Show available capabilities
 /clear — Reset conversation history
 /report — Generate an instant business intelligence report
+/ping — Check if the bot is online
 
 Just type your question and I'll route it to the right expert. Try:
 _"Write an Instagram post for our vermicompost product"_
@@ -69,7 +70,7 @@ Auto-sends to the team group every Monday at 9:00 AM IST
 • Ask follow-up questions — I remember context within the conversation
 • Use /clear to reset history and memory
 
-*Commands:* /start /help /clear /report`;
+*Commands:* /start /help /clear /report /ping`;
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -86,6 +87,20 @@ bot.onText(/\/clear/, (msg) => {
   clearHistory(chatId);
   clearMemories(chatId);
   bot.sendMessage(chatId, "✅ Conversation history and memory cleared. Start fresh!", { parse_mode: "Markdown" });
+});
+
+bot.onText(/\/ping/, (msg) => {
+  const uptime = Math.floor(process.uptime());
+  const h = Math.floor(uptime / 3600);
+  const m = Math.floor((uptime % 3600) / 60);
+  const s = uptime % 60;
+  const uptimeStr = h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
+  const now = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  bot.sendMessage(
+    msg.chat.id,
+    `🟢 *Bot is online*\n⏱ Uptime: ${uptimeStr}\n🕐 ${now} IST`,
+    { parse_mode: "Markdown" }
+  );
 });
 
 bot.onText(/\/report/, async (msg) => {
