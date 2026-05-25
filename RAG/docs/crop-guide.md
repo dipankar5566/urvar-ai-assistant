@@ -10,18 +10,22 @@
 |------|------------------------|-----------|--------------------------|
 | **Paddy (Rice)** | Vermicompost + FYM + PROM | Humic Acid Liquid (drip/drench) | Boron EDTA (foliar, if symptoms) |
 | **Potato** | Vermicompost + FYM + PROM | Humic Acid Liquid | Zinc EDTA (if yellowing) |
-| **Tomato** | Vermicompost + PROM Humic Enriched | Humic Acid Liquid | PROM Flowering Booster + Boron EDTA |
-| **Brinjal (Eggplant)** | Vermicompost + PROM Humic Enriched | Humic Acid Liquid | PROM Flowering Booster |
-| **Chilli** | Vermicompost + PROM | Humic Acid Liquid | PROM Flowering Booster + Boron EDTA |
-| **Cauliflower / Cabbage** | FYM + PROM | Humic Acid Liquid | Boron EDTA (critical — hollow stem risk) |
+| **Tomato** | Vermicompost + FYM + PROM Humic Enriched | Humic Acid Liquid | PROM Flowering Booster + Boron EDTA |
+| **Brinjal (Eggplant)** | Vermicompost + FYM + PROM Humic Enriched | Humic Acid Liquid | PROM Flowering Booster |
+| **Chilli** | Vermicompost + FYM + PROM | Humic Acid Liquid | PROM Flowering Booster + Boron EDTA |
+| **Cauliflower / Cabbage** | Vermicompost + FYM + PROM | Humic Acid Liquid | Boron EDTA (critical — hollow stem risk) |
 | **Mango** | Vermicompost + FYM + PROM | Humic Acid Liquid | PROM Flowering Booster + Boron EDTA |
 | **Banana** | Vermicompost + FYM + PROM | Humic Acid Liquid | Zinc EDTA (if leaf yellowing) |
 | **Guava** | Vermicompost + PROM | Humic Acid Liquid | PROM Flowering Booster |
 | **Marigold** | Vermicompost + PROM Humic Enriched | Humic Acid Liquid | PROM Flowering Booster |
 | **Tuberose** | Vermicompost + PROM Humic Enriched | Humic Acid Liquid | PROM Flowering Booster + Boron EDTA |
 | **Jute** | FYM + PROM | Humic Acid Liquid | — |
-| **Mustard / Oilseeds** | FYM + PROM | — | Boron EDTA (critical for pod set) |
+| **Mustard / Oilseeds** | Vermicompost + FYM + PROM | — | Boron EDTA (critical for pod set) |
 | **Beans / Pulses** | Vermicompost + PROM | Humic Acid Liquid | Boron EDTA |
+| **Wheat** | FYM + Vermicompost + PROM | Zinc EDTA (foliar at tillering if yellowing) | — |
+| **Onion** | Vermicompost + FYM + PROM | Humic Acid Liquid | Zinc EDTA + Boron EDTA (bulb formation) |
+| **Cucurbits** (Cucumber / Bitter Gourd / Bottle Gourd) | Vermicompost + FYM + PROM Humic Enriched | Humic Acid Liquid | PROM Flowering Booster + Boron EDTA |
+| **Okra / Bhindi** | Vermicompost + FYM + PROM | Humic Acid Liquid | Boron EDTA (at flower bud stage) |
 | **Nursery / Seed Beds** | Vermicompost (heavy dose, mixed with topsoil) | Humic Acid Liquid (light drench) | — |
 | **Home Garden Pots** | Vermicompost (pot mix base) | Humic Acid Liquid (foliar or drench) | PROM Flowering Booster (for flowering plants) |
 
@@ -48,7 +52,7 @@
 | Growth Stage | Product | Dose per Katha | Method |
 |-------------|---------|---------------|--------|
 | Bed preparation (before planting) | Vermicompost | 25–30 kg | Mix into top 6 inches of soil |
-| Bed preparation | FYM | 50–60 kg | Mix into top 6 inches of soil |
+| Bed preparation | FYM | 100–135 kg | Mix into top 6 inches of soil |
 | Bed preparation | PROM Humic Enriched | 2–2.5 kg | Mix into soil |
 | Vegetative growth (30 DAP) | Humic Acid Liquid | 15–25 ml in 20L water | Soil drench |
 | Tuber bulking (if zinc deficiency) | Zinc EDTA | 3–7 gm in 20L water | Foliar spray |
@@ -61,7 +65,8 @@
 
 | Growth Stage | Product | Dose per Katha | Method |
 |-------------|---------|---------------|--------|
-| Before transplanting (basal) | Vermicompost | 25–35 kg | Mix into beds |
+| Before transplanting (basal) | Vermicompost | 15–20 kg | Mix into beds |
+| Before transplanting | FYM | 65–70 kg | Mix into beds |
 | Before transplanting | PROM Humic Enriched | 2–2.5 kg | Mix into beds |
 | Vegetative growth (2–3 weeks after transplanting) | Humic Acid Liquid | 30–60 ml in 20L water | Foliar spray or soil drench |
 | 10–15 days before flowering | PROM Flowering Booster | 2–2.5 kg | Top dress around root zone |
@@ -76,7 +81,8 @@
 
 | Growth Stage | Product | Dose per Katha | Method |
 |-------------|---------|---------------|--------|
-| Bed preparation | FYM | 50–65 kg | Mix into soil |
+| Bed preparation | Vermicompost | 7–10 kg | Mix into soil |
+| Bed preparation | FYM | 65–70 kg | Mix into soil |
 | Bed preparation | PROM | 2–2.5 kg | Mix into soil |
 | 3 weeks after transplanting | Humic Acid Liquid | 30–60 ml in 20L water | Foliar spray |
 | Head formation stage (critical) | Boron EDTA | 2–4 gm in 20L water | Foliar spray |
@@ -131,12 +137,104 @@
 
 | Growth Stage | Product | Dose per Katha | Method |
 |-------------|---------|---------------|--------|
+| Land preparation | Vermicompost | 7–10 kg | Mix into soil |
 | Land preparation | FYM | 40–50 kg | Mix into soil |
 | At sowing | PROM | 1.5–1.7 kg | Mix into seed bed |
 | Rosette stage | Humic Acid Liquid | 15–25 ml in 20L water | Soil drench |
 | Pre-flowering (bud stage — critical) | Boron EDTA | 2–4 gm in 20L water | Foliar spray |
 
 **Why Boron is Critical for Mustard:** Boron deficiency in mustard causes failure of pollen viability and hollow stems, directly reducing pod set and seed yield. It is one of the most boron-sensitive crops grown in WB. Pre-flowering application of Boron EDTA is strongly recommended.
+
+---
+
+### Jute — Kharif Season
+
+| Growth Stage | Product | Dose per Katha | Method |
+|-------------|---------|---------------|--------|
+| Land preparation (before sowing) | FYM | 35–50 kg | Broadcast and incorporate into soil |
+| At sowing | PROM | 1.5–2 kg | Mix into seed bed |
+| Vegetative growth (25–30 DAS) | Humic Acid Liquid | 15–25 ml in 20L water | Soil drench |
+| If interveinal yellowing visible | Zinc EDTA | 3–5 gm in 20L water | Foliar spray |
+
+**Note:** Jute thrives in WB's alluvial soils with good organic matter. FYM applied before sowing improves fiber quality and stand uniformity. Zinc deficiency is documented in WB lateritic soils — watch for yellowing at 25–40 DAS. Harvest at 100–120 DAS when lower leaves begin to shed and plants reach full height.
+
+---
+
+### Beans / Pulses (Cowpea, French Bean, Lentil) — Rabi / Kharif
+
+| Growth Stage | Product | Dose per Katha | Method |
+|-------------|---------|---------------|--------|
+| Land prep / bed preparation | FYM | 30–40 kg | Mix into soil |
+| At sowing | PROM | 1.5–2 kg | Mix into seed bed |
+| Vegetative growth (20–25 DAS) | Humic Acid Liquid | 15–25 ml in 20L water | Soil drench |
+| Pre-flowering (bud stage) | Boron EDTA | 2–3 gm in 20L water | Foliar spray |
+| If interveinal yellowing | Zinc EDTA | 3–5 gm in 20L water | Foliar spray |
+
+**Why Boron for Pulses:** Boron is essential for pollen viability and pod set in legumes. In WB's alluvial and lateritic soils, boron deficiency in pulses is well documented — a single pre-flowering Boron EDTA spray reduces flower drop and improves seed fill. Cowpea matures at 60–90 DAS; lentil (rabi) sown October–November matures in 100–120 days.
+
+---
+
+### Wheat — Rabi Season
+
+| Growth Stage | Product | Dose per Katha | Method |
+|-------------|---------|---------------|--------|
+| Land preparation (2 weeks before sowing) | Vermicompost | 20–25 kg | Broadcast and incorporate |
+| Land preparation | FYM | 30–40 kg | Broadcast and incorporate |
+| At sowing | PROM | 1.5–2 kg | Mix into seed bed |
+| Tillering stage (25–35 DAS) | Humic Acid Liquid | 15–25 ml in 20L water | Soil drench |
+| Tillering / booting stage (if yellowing) | Zinc EDTA | 3–5 gm in 20L water | Foliar spray |
+
+**Why Zinc for Wheat:** Zinc is the most deficient micronutrient in WB's continuous rice-wheat system soils. Repeated paddy-wheat cropping without micronutrient replenishment rapidly depletes available zinc. Research in WB's acid and lateritic soils confirms significant yield response to zinc application at tillering and booting stages. Vermicompost + FYM combination also reduces soil acidification caused by repeated chemical NPK use.
+
+---
+
+### Onion — Rabi / Late Kharif
+
+| Growth Stage | Product | Dose per Katha | Method |
+|-------------|---------|---------------|--------|
+| Bed preparation | Vermicompost | 20–25 kg | Mix into top 6 inches of soil |
+| Bed preparation | FYM | 35–50 kg | Mix into top 6 inches of soil |
+| Bed preparation | PROM | 1.5–2 kg | Mix into soil |
+| 3 weeks after transplanting | Humic Acid Liquid | 20–30 ml in 20L water | Soil drench |
+| 30 DAT — first spray | Zinc EDTA | 3–5 gm in 20L water | Foliar spray |
+| 30 DAT — first spray | Boron EDTA | 2–3 gm in 20L water | Foliar spray |
+| 50 DAT — second spray | Zinc EDTA | 3–5 gm in 20L water | Foliar spray |
+| 50 DAT — second spray | Boron EDTA | 2–3 gm in 20L water | Foliar spray |
+
+**Why Zinc + Boron at 30 and 50 DAT:** Research in WB's New Alluvial Zone (Nadia district) found that combined zinc sulphate + borax application gave the highest recorded onion yields at 266 q/ha. Both micronutrients are commonly deficient in WB alluvial soils. Two sprays at 30 and 50 DAT — as specified in WB package-of-practices — capture both early bulb initiation and active bulb growth phases. **Important:** Avoid nitrogen top-dressing after bulb initiation — excess N causes "bull neck" and reverts plants to vegetative growth, ruining bulb quality. Maturity at 80–105 DAT.
+
+---
+
+### Cucurbits (Cucumber, Bitter Gourd, Bottle Gourd) — Summer / Kharif
+
+*Doses are per plant/pit — cucurbits are grown at wide spacing (1.5–2 m between plants) on raised beds or in pits.*
+
+| Growth Stage | Product | Dose per Plant / Pit | Method |
+|-------------|---------|---------------------|--------|
+| Pit preparation (1 week before planting) | Vermicompost | 2–3 kg per pit | Mix thoroughly into planting pit |
+| Pit preparation | FYM | 3–5 kg per pit | Mix into planting pit |
+| At planting | PROM Humic Enriched | 200–250 gm per pit | Mix into pit |
+| Vegetative (3 weeks after planting) | Humic Acid Liquid | 30–60 ml in 20L water | Foliar spray or soil drench |
+| Pre-flowering (10–14 days before) | PROM Flowering Booster | 200–250 gm per plant | Top dress around root zone |
+| First flower bud stage | Boron EDTA | 2–3 gm in 20L water | Foliar spray |
+| If poor fruit set / deformed fruits | Boron EDTA | 2–3 gm in 20L water | Foliar spray (repeat 15 days later) |
+
+**Note:** Boron deficiency is the most common cucurbit problem in WB lateritic soils — causes deformed, bitter-tasting fruits, poor fruit set, and short pod stubs. First cucumber harvest at 50–70 DAS; bitter gourd at 55–65 DAS; bottle gourd at 100–120 DAS.
+
+---
+
+### Okra / Bhindi — Summer / Kharif
+
+| Growth Stage | Product | Dose per Katha | Method |
+|-------------|---------|---------------|--------|
+| Land preparation | Vermicompost | 20–30 kg | Broadcast and incorporate |
+| Land preparation | FYM | 35–45 kg | Broadcast and incorporate |
+| At sowing | PROM | 1.5–2 kg | Mix into seed bed |
+| Vegetative growth (20–25 DAS) | Humic Acid Liquid | 20–40 ml in 20L water | Foliar spray |
+| Flower bud stage (30–35 DAS) | Boron EDTA | 2–3 gm in 20L water | Foliar spray |
+| Repeat application | Boron EDTA | 2–3 gm in 20L water | Foliar spray (15 days after first) |
+
+**Why Boron for Okra:** Research shows boron at 1.5 kg/ha shortens days to first flowering and first picking in okra. Boron deficiency causes distorted, brittle leaves and short, deformed pods with poor fruit set — a frequent problem in WB alluvial and lateritic soils where boron availability is chronically low. Vermicompost at 10 t/ha has been shown to give 33–34% fruit yield increase over chemical NPK alone. First harvest expected at 55–65 DAS.
 
 ---
 
@@ -190,3 +288,7 @@ For someone starting their home garden with no prior experience with organic fer
 | Overall pale, low-vigor plant with dark green older leaves | Phosphorus | PROM or PROM Humic Enriched |
 | General nutrient deficiency, low vigor, poor soil | All macro/micro | Vermicompost + Humic Acid Liquid |
 | Soil compaction, poor water retention | Organic matter deficit | Vermicompost + FYM |
+| Short, stubby, deformed okra or cucurbit pods | Boron | Boron EDTA |
+| Brittle, distorted new leaves on okra or cucurbits | Boron | Boron EDTA |
+| Poor pollen viability / low pod set in pulses | Boron | Boron EDTA |
+| Yellowing of wheat or rice seedlings in lateritic soils | Zinc | Zinc EDTA 12% |
