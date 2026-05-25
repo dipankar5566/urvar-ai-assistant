@@ -1,0 +1,1 @@
+export const CATALOGUE_PRODUCTS = `Enriched Vermicompost (5 kg), Cow Dung Manure/FYM (5 kg), PROM (50 kg), PROM Humic Based Flowering Booster (250 ml), PROM Humic Enriched (5 kg), Humic Acid Liquid Bio-Stimulant (1 L), Zinc EDTA 12% (250 g), Boron EDTA (250 g)`;

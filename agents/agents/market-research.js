@@ -46,7 +46,7 @@ export async function runMarketResearchAgent(userMessage, history = [], tracker 
     const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
     const toolResults = [];
 
-    for (const toolUse of toolUseBlocks) {
+    for (const [i, toolUse] of toolUseBlocks.entries()) {
       let result;
       try {
         if (toolUse.name === "web_search") {
@@ -61,7 +61,7 @@ export async function runMarketResearchAgent(userMessage, history = [], tracker 
       }
 
       const resultText = typeof result === "string" ? result : JSON.stringify(result);
-      const isLastTool = toolUseBlocks.indexOf(toolUse) === toolUseBlocks.length - 1;
+      const isLastTool = i === toolUseBlocks.length - 1;
       const shouldCache = loopIteration === 0 && isLastTool;
 
       toolResults.push({

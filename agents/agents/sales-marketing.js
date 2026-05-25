@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { webSearch, webSearchToolDefinition } from "../tools/web-search.js";
 import { queryKnowledgeBase, knowledgeBaseToolDefinition } from "../tools/knowledge-base.js";
 import { addUsage } from "../tools/token-tracker.js";
+import { CATALOGUE_PRODUCTS } from "../catalogue-fallback.js";
 
 dotenv.config();
 
@@ -44,9 +45,9 @@ export async function runSalesMarketingAgent(userMessage, history = [], tracker 
     const useful = catalogue && !catalogue.includes("No relevant information") && !catalogue.includes("No information found") && catalogue.length > 80;
     catalogueSection = useful
       ? `\n\n## Urvar Product Catalogue (from knowledge base)\n${catalogue}\n\nYou may ONLY recommend Urvar products listed above. Never suggest products from other brands or products Urvar does not manufacture.`
-      : `\n\n## Urvar Product Catalogue\nUrvar sells ONLY these 8 products: Enriched Vermicompost (5 kg), Cow Dung Manure/FYM (5 kg), PROM (50 kg), PROM Humic Based Flowering Booster (250 ml), PROM Humic Enriched (5 kg), Humic Acid Liquid Bio-Stimulant (1 L), Zinc EDTA 12% (250 g), Boron EDTA (250 g). You may ONLY recommend products from this list — never suggest any other fertilizer, brand, or product Urvar does not sell.`;
+      : `\n\n## Urvar Product Catalogue\nUrvar sells ONLY these 8 products: ${CATALOGUE_PRODUCTS}. You may ONLY recommend products from this list — never suggest any other fertilizer, brand, or product Urvar does not sell.`;
   } catch {
-    catalogueSection = `\n\n## Urvar Product Catalogue\nUrvar sells ONLY these 8 products: Enriched Vermicompost (5 kg), Cow Dung Manure/FYM (5 kg), PROM (50 kg), PROM Humic Based Flowering Booster (250 ml), PROM Humic Enriched (5 kg), Humic Acid Liquid Bio-Stimulant (1 L), Zinc EDTA 12% (250 g), Boron EDTA (250 g). You may ONLY recommend products from this list — never suggest any other fertilizer, brand, or product Urvar does not sell.`;
+    catalogueSection = `\n\n## Urvar Product Catalogue\nUrvar sells ONLY these 8 products: ${CATALOGUE_PRODUCTS}. You may ONLY recommend products from this list — never suggest any other fertilizer, brand, or product Urvar does not sell.`;
   }
   const system = SYSTEM_PROMPT + catalogueSection;
 
@@ -65,7 +66,7 @@ export async function runSalesMarketingAgent(userMessage, history = [], tracker 
     const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
     const toolResults = [];
 
-    for (const toolUse of toolUseBlocks) {
+    for (const [i, toolUse] of toolUseBlocks.entries()) {
       let result;
       try {
         if (toolUse.name === "web_search") {
@@ -80,7 +81,7 @@ export async function runSalesMarketingAgent(userMessage, history = [], tracker 
       }
 
       const resultText = typeof result === "string" ? result : JSON.stringify(result);
-      const isLastTool = toolUseBlocks.indexOf(toolUse) === toolUseBlocks.length - 1;
+      const isLastTool = i === toolUseBlocks.length - 1;
       const shouldCache = loopIteration === 0 && isLastTool;
 
       toolResults.push({
