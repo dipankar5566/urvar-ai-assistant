@@ -46,6 +46,8 @@ urvar-ai-assistant/
 │   ├── train.py               ← Downloads PlantVillage via TF Datasets, trains MobileNetV2, exports TF.js graph model
 │   ├── requirements.txt       ← tensorflow, tensorflow-datasets, tensorflowjs
 │   ├── labels.json            ← 38-class index → human-readable disease name (committed; overwritten by train.py)
+│   ├── venv/                  ← git-ignored; Python virtual environment
+│   ├── train.log              ← git-ignored; output of last training run
 │   └── models/                ← git-ignored; populated after running train.py
 │       ├── plant_village_saved_model/  ← Keras SavedModel (intermediate)
 │       └── tfjs_crop_classifier/      ← TF.js graph model loaded by crop-classifier.js
@@ -267,13 +269,39 @@ Test the scheduler manually:
 /report   (in Telegram chat)
 ```
 
+## ML Training Pipeline
+
+Run once to produce the TF.js model used by `crop-classifier.js`. Requires Python 3.10+.
+
+```bash
+cd ml
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python train.py                 # downloads PlantVillage (~1.5 GB), trains, exports
+```
+
+Outputs written to `ml/models/` (git-ignored). After training, the bot automatically uses the model — no config change needed. If `ml/models/tfjs_crop_classifier/` is absent, `crop-classifier.js` skips inference and crop-doctor falls back to vision-only diagnosis.
+
+To verify the dataset loaded correctly before a full training run:
+
+```python
+import tensorflow_datasets as tfds
+ds, info = tfds.load("plant_village", split="train[:1%]", as_supervised=True, with_info=True)
+print(len(info.features["label"].names), "classes")
+for img, label in ds.take(1):
+    print(img.shape, info.features["label"].names[label.numpy()])
+```
+
+---
+
 ## PM2 / Production
 
 `ecosystem.config.cjs` uses `.cjs` extension intentionally — PM2 requires CommonJS config even in ESM projects.
 
-Before deploying, update `cwd`, `out_file`, and `error_file` paths (currently set to Windows `e:\` paths):
+Paths in `ecosystem.config.cjs` are set to macOS paths for this machine. Update `cwd`, `out_file`, and `error_file` when deploying to a different machine.
 
 ```bash
-pm2 start ecosystem.config.cjs
-pm2 logs urvar-bot
+npx pm2 start ecosystem.config.cjs
+npx pm2 logs urvar-bot
 ```
