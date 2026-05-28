@@ -8,11 +8,13 @@ Usage:
 Outputs:
     ml/models/plant_village_saved_model/  — Keras SavedModel
     ml/models/tfjs_crop_classifier/       — TF.js graph model (load in Node.js)
-    ml/labels.json                         — 38-class index → name mapping (already committed)
+    ml/labels.json                         — class index → name mapping (63 classes across 4 datasets)
 """
 
+import glob
 import json
 import os
+import random
 import subprocess
 
 import tensorflow as tf
@@ -55,29 +57,49 @@ print("Loading datasets …")
     with_info=True,
 )
 
-# Five-Crop-Diseases — read from local path (download once via Kaggle website or CLI)
-FIVE_CROP_DIR = os.path.join(SCRIPT_DIR, "data", "five-crop-diseases")
-if not os.path.isdir(os.path.join(FIVE_CROP_DIR, "train")):
+# Five-Crop-Diseases — flat structure: Crop___Disease/<crop>/<disease>/<images>
+# No pre-built split; we do 80/20 here with a fixed seed.
+FIVE_CROP_BASE = os.path.join(
+    SCRIPT_DIR, "data", "five-crop-diseases",
+    "Crop Diseases Dataset", "Crop Diseases", "Crop___Disease",
+)
+if not os.path.isdir(FIVE_CROP_BASE):
     raise FileNotFoundError(
-        f"Five-crop-diseases dataset not found at {FIVE_CROP_DIR}/train/\n"
+        f"Five-crop-diseases dataset not found at {FIVE_CROP_BASE}\n"
         "Download from https://www.kaggle.com/datasets/shubham2703/five-crop-diseases-dataset "
-        "and extract to ml/data/five-crop-diseases/ so that ml/data/five-crop-diseases/train/ exists."
+        "and extract to ml/data/five-crop-diseases/"
     )
 
-five_crop_train_ds = tf.keras.utils.image_dataset_from_directory(
-    os.path.join(FIVE_CROP_DIR, "train"),
-    image_size=(IMG_SIZE, IMG_SIZE),
-    batch_size=None,
-    label_mode="int",
-    shuffle=False,
-)
-five_crop_val_ds = tf.keras.utils.image_dataset_from_directory(
-    os.path.join(FIVE_CROP_DIR, "validation"),
-    image_size=(IMG_SIZE, IMG_SIZE),
-    batch_size=None,
-    label_mode="int",
-    shuffle=False,
-)
+# Collect leaf disease directories (depth: crop_dir/disease_dir)
+_disease_dirs = sorted([
+    d
+    for crop_dir in sorted(glob.glob(os.path.join(FIVE_CROP_BASE, "*")))
+    if os.path.isdir(crop_dir)
+    for d in sorted(glob.glob(os.path.join(crop_dir, "*")))
+    if os.path.isdir(d)
+])
+five_crop_class_names = [os.path.basename(d) for d in _disease_dirs]
+
+_all_paths, _all_labels_fc = [], []
+for _idx, _d in enumerate(_disease_dirs):
+    for _fname in sorted(os.listdir(_d)):
+        if os.path.splitext(_fname)[1].lower() in {".jpg", ".jpeg", ".png"}:
+            _all_paths.append(os.path.join(_d, _fname))
+            _all_labels_fc.append(_idx)
+
+_rng = random.Random(42)
+_combined = list(zip(_all_paths, _all_labels_fc))
+_rng.shuffle(_combined)
+_all_paths, _all_labels_fc = zip(*_combined)
+
+_split = int(0.8 * len(_all_paths))
+_fc_train_paths  = list(_all_paths[:_split])
+_fc_train_labels = list(_all_labels_fc[:_split])
+_fc_val_paths    = list(_all_paths[_split:])
+_fc_val_labels   = list(_all_labels_fc[_split:])
+
+print(f"Five-crop classes ({len(five_crop_class_names)}): {five_crop_class_names}")
+print(f"Five-crop images — train: {len(_fc_train_paths)}, val: {len(_fc_val_paths)}")
 
 # ── Build merged labels list ───────────────────────────────────────────────────
 pv_labels = [
@@ -95,7 +117,7 @@ cassava_labels = [
     for name in cassava_info.features["label"].names
 ]  # indices 41–45
 
-five_crop_labels = list(five_crop_train_ds.class_names)  # indices 46–(46+N-1)
+five_crop_labels = five_crop_class_names  # indices 46–(46+N-1)
 
 all_labels = pv_labels + beans_labels + cassava_labels + five_crop_labels
 NUM_CLASSES = len(all_labels)
@@ -158,6 +180,24 @@ def remap_five_crop(image, label):
     return image, tf.cast(label, tf.int64) + FIVE_CROP_OFFSET
 
 AUTOTUNE = tf.data.AUTOTUNE
+
+
+def load_fc_image(path, label):
+    img = tf.io.read_file(path)
+    img = tf.image.decode_image(img, channels=3, expand_animations=False)
+    img = tf.cast(img, tf.float32)
+    img = tf.image.resize(img, [IMG_SIZE, IMG_SIZE])
+    return img, tf.cast(label, tf.int64)
+
+
+five_crop_train_ds = (
+    tf.data.Dataset.from_tensor_slices((_fc_train_paths, _fc_train_labels))
+    .map(load_fc_image, num_parallel_calls=AUTOTUNE)
+)
+five_crop_val_ds = (
+    tf.data.Dataset.from_tensor_slices((_fc_val_paths, _fc_val_labels))
+    .map(load_fc_image, num_parallel_calls=AUTOTUNE)
+)
 
 pv_train_cast            = pv_train_raw.map(cast_pv,           num_parallel_calls=AUTOTUNE)
 pv_val_cast              = pv_val_raw.map(cast_pv,             num_parallel_calls=AUTOTUNE)

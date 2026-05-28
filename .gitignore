@@ -22,3 +22,4 @@ ml/models/
 # ML training artifacts
 ml/venv/
 ml/train.log
+ml/data/
