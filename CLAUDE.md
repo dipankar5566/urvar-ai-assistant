@@ -22,7 +22,7 @@ urvar-ai-assistant/
 │   │   ├── knowledge-base.js  ← OpenAI vector store query (file_search)
 │   │   ├── token-tracker.js   ← Token usage accumulation across agent calls
 │   │   ├── image-optimizer.js ← sharp-based image pre-processing (resize, denoise, contrast, color variants, augmentation) used by crop-doctor
-│   │   └── crop-classifier.js ← TF.js MobileNetV2 inference on PlantVillage 38-class model; gracefully skips if model not trained
+│   │   └── crop-classifier.js ← TF.js MobileNetV2 inference on 63-class model (PlantVillage + Beans + Cassava + FiveCrop); gracefully skips if model not trained
 │   ├── data/                  ← Runtime state — git-ignored, auto-created on first run
 │   │   ├── history.json       ← Conversation history by chatId
 │   │   └── memories.json      ← Long-term extracted facts by chatId
@@ -43,9 +43,9 @@ urvar-ai-assistant/
 │       ├── deploy.md                  ← End-to-end deployment checklist
 │       └── optimize-costs.md          ← Token footer, caching strategy, cost hotspots
 ├── ml/                        ← Python ML training pipeline (run once to produce the TF.js model)
-│   ├── train.py               ← Downloads PlantVillage via TF Datasets, trains MobileNetV2, exports TF.js graph model
+│   ├── train.py               ← Loads 4 datasets (PlantVillage, Beans, Cassava, FiveCrop), trains MobileNetV2, exports TF.js graph model
 │   ├── requirements.txt       ← tensorflow, tensorflow-datasets, tensorflowjs
-│   ├── labels.json            ← 38-class index → human-readable disease name (committed; overwritten by train.py)
+│   ├── labels.json            ← 63-class index → human-readable disease name (committed; overwritten by train.py)
 │   ├── venv/                  ← git-ignored; Python virtual environment
 │   ├── train.log              ← git-ignored; output of last training run
 │   └── models/                ← git-ignored; populated after running train.py
@@ -278,12 +278,28 @@ cd ml
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python train.py                 # downloads PlantVillage (~1.5 GB), trains, exports
+python3 train.py                # downloads datasets, trains 63-class model, exports TF.js
+```
+
+**Datasets used (63 classes total):**
+| Dataset | Source | Classes |
+|---------|--------|---------|
+| PlantVillage | TF Datasets (`plant_village`) | 38 (indices 0–37) |
+| Beans | TF Datasets (`beans`) | 3 (indices 38–40) |
+| Cassava | TF Datasets (`cassava`) | 5 (indices 41–45) |
+| FiveCrop (Rice/Wheat/Corn/Potato/Sugarcane) | Kaggle `shubham2703/five-crop-diseases-dataset` → `ml/data/` (git-ignored) | 17 (indices 46–62) |
+
+The FiveCrop dataset must be downloaded manually before training:
+```bash
+pip install kaggle
+kaggle datasets download -d shubham2703/five-crop-diseases-dataset -p ml/data/five-crop-diseases --unzip
 ```
 
 Outputs written to `ml/models/` (git-ignored). After training, the bot automatically uses the model — no config change needed. If `ml/models/tfjs_crop_classifier/` is absent, `crop-classifier.js` skips inference and crop-doctor falls back to vision-only diagnosis.
 
-To verify the dataset loaded correctly before a full training run:
+The current committed model was trained on PlantVillage only (38 classes, 97.74% val accuracy). Re-run `train.py` to upgrade to 63 classes — back up `ml/models/tfjs_crop_classifier/` first if needed.
+
+To verify datasets load correctly before a full training run:
 
 ```python
 import tensorflow_datasets as tfds
