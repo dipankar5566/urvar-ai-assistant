@@ -15,3 +15,6 @@ Thumbs.db
 
 # PM2 logs
 logs/
+
+# ML model weights — run ml/train.py to generate locally
+ml/models/

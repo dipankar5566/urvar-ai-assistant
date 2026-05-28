@@ -4,6 +4,8 @@ import { webSearch, webSearchToolDefinition } from "../tools/web-search.js";
 import { queryKnowledgeBase, knowledgeBaseToolDefinition } from "../tools/knowledge-base.js";
 import { addUsage } from "../tools/token-tracker.js";
 import { CATALOGUE_PRODUCTS } from "../catalogue-fallback.js";
+import { optimizeCropImage } from "../tools/image-optimizer.js";
+import { classifyCropImage } from "../tools/crop-classifier.js";
 
 dotenv.config();
 
@@ -52,23 +54,55 @@ IMPORTANT RULES:
 - If you cannot identify the crop from the image: ask "Which crop is this, and which state/district are you in?" before giving treatment advice.
 - Only recommend products from Urvar's catalogue. If the problem needs a fungicide or pesticide Urvar doesn't sell, state this clearly and recommend the Urvar product that best supports soil recovery.
 - Old leaves affected → likely mobile nutrient deficiency (N, P, K, Mg). Young leaves affected → likely immobile nutrient deficiency (Ca, Fe, Zn, B).
-- Keep language simple. Farmers need fast, actionable answers.`;
+- Keep language simple. Farmers need fast, actionable answers.
+
+IMAGE PRE-PROCESSING APPLIED:
+Your images have been automatically optimized for disease detection before reaching you:
+- Resized to 256×256 pixels (CNN-standard)
+- Median filter applied to reduce camera noise while preserving lesion boundaries
+- Contrast normalized and gamma-corrected (γ=1.2) to balance uneven outdoor lighting
+- A greyscale variant is included — use it to judge texture, pattern spread, and necrosis shape independent of color
+- A saturation-enhanced variant is included — use it to identify subtle pigment changes (rust, blight, yellowing) that appear washed out in the original
+- Rotated and flipped variants may be included — assess each for lesion distribution consistency
+
+IMAGING LIMITATIONS: This system uses standard RGB photography only. Hyperspectral or thermal imaging (capable of detecting pre-symptomatic physiological stress) is not available. If you suspect early-stage infection with no visible symptoms yet, advise the farmer to arrange a soil test or contact a local Krishi Vigyan Kendra (KVK) for lab analysis.`;
 
 const tools = [webSearchToolDefinition, knowledgeBaseToolDefinition];
 
 export async function runCropDoctorAgent(userMessage, history = [], tracker = null, imageDataArray = [], mediaType = "image/jpeg") {
-  const imageBlocks = imageDataArray.map((data) => ({
+  // Pre-process images; geometric augmentation only for single-image input to cap token cost
+  const singleImage = imageDataArray.length === 1;
+  const optimizedDataArray = [];
+  for (const data of imageDataArray) {
+    const variants = await optimizeCropImage(data, { augment: singleImage });
+    optimizedDataArray.push(...variants);
+  }
+
+  const imageBlocks = optimizedDataArray.map((data) => ({
     type: "image",
-    source: { type: "base64", media_type: mediaType, data },
+    source: { type: "base64", media_type: "image/jpeg", data },
   }));
 
-  const defaultText = imageDataArray.length > 1
-    ? "Please analyze all these photos of the same crop problem. Use all images together for a more accurate diagnosis."
+  // CNN pre-classifier gives Claude a disease prior to confirm or override
+  let mlPrior = "";
+  if (optimizedDataArray.length > 0) {
+    const result = await classifyCropImage(optimizedDataArray[0]);
+    if (result.available) {
+      const pct = (c) => `${Math.round(c * 100)}%`;
+      const top = result.top3.map((p) => `${p.label} (${pct(p.confidence)})`).join(", ");
+      mlPrior = `\n\n[ML Pre-diagnosis — CNN trained on PlantVillage: ${top}]`;
+    }
+  }
+
+  const defaultText = optimizedDataArray.length > 1
+    ? `Please analyze all ${optimizedDataArray.length} optimized views of this crop problem. These are pre-processed variants (enhanced, greyscale, saturation-boosted, and rotation/flip augmentations) of the same original photo(s). Use all views together for the most accurate diagnosis.`
     : "Please analyze this image. Identify any crop disease, pest damage, nutrient deficiency, or soil problem.";
 
+  const textContent = (userMessage || defaultText) + mlPrior;
+
   const userContent = imageBlocks.length > 0
-    ? [...imageBlocks, { type: "text", text: userMessage || defaultText }]
-    : userMessage;
+    ? [...imageBlocks, { type: "text", text: textContent }]
+    : textContent;
 
   const messages = [
     ...history,

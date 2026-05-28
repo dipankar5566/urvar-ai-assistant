@@ -20,7 +20,9 @@ urvar-ai-assistant/
 │   ├── tools/                 ← Shared tool modules
 │   │   ├── web-search.js      ← Tavily API wrapper (15s timeout)
 │   │   ├── knowledge-base.js  ← OpenAI vector store query (file_search)
-│   │   └── token-tracker.js   ← Token usage accumulation across agent calls
+│   │   ├── token-tracker.js   ← Token usage accumulation across agent calls
+│   │   ├── image-optimizer.js ← sharp-based image pre-processing (resize, denoise, contrast, color variants, augmentation) used by crop-doctor
+│   │   └── crop-classifier.js ← TF.js MobileNetV2 inference on PlantVillage 38-class model; gracefully skips if model not trained
 │   ├── data/                  ← Runtime state — git-ignored, auto-created on first run
 │   │   ├── history.json       ← Conversation history by chatId
 │   │   └── memories.json      ← Long-term extracted facts by chatId
@@ -40,6 +42,13 @@ urvar-ai-assistant/
 │       ├── debug-bot.md               ← Runtime error diagnosis and PM2 commands
 │       ├── deploy.md                  ← End-to-end deployment checklist
 │       └── optimize-costs.md          ← Token footer, caching strategy, cost hotspots
+├── ml/                        ← Python ML training pipeline (run once to produce the TF.js model)
+│   ├── train.py               ← Downloads PlantVillage via TF Datasets, trains MobileNetV2, exports TF.js graph model
+│   ├── requirements.txt       ← tensorflow, tensorflow-datasets, tensorflowjs
+│   ├── labels.json            ← 38-class index → human-readable disease name (committed; overwritten by train.py)
+│   └── models/                ← git-ignored; populated after running train.py
+│       ├── plant_village_saved_model/  ← Keras SavedModel (intermediate)
+│       └── tfjs_crop_classifier/      ← TF.js graph model loaded by crop-classifier.js
 └── RAG/
     ├── docs/                  ← Knowledge base source files — edit these to update bot knowledge
     │   ├── company.md
@@ -69,7 +78,7 @@ orchestrator.js   (Claude Sonnet with tool_use — routes to one specialist per 
      ↓
 agents/*.js       (six specialists — each runs an agentic loop with web_search + query_knowledge_base; crop-doctor also accepts image data)
      ↓
-tools/*.js        (Tavily web search  |  OpenAI RAG knowledge base)
+tools/*.js        (Tavily web search  |  OpenAI RAG knowledge base  |  sharp image optimizer  |  TF.js CNN classifier for crop-doctor)
 ```
 
 ### Rules
