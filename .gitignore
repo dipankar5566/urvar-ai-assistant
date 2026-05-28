@@ -18,3 +18,7 @@ logs/
 
 # ML model weights — run ml/train.py to generate locally
 ml/models/
+
+# ML training artifacts
+ml/venv/
+ml/train.log
