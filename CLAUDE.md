@@ -22,7 +22,7 @@ urvar-ai-assistant/
 │   │   ├── knowledge-base.js  ← OpenAI vector store query (file_search)
 │   │   ├── token-tracker.js   ← Token usage accumulation across agent calls
 │   │   ├── image-optimizer.js ← sharp-based image pre-processing (resize, denoise, contrast, color variants, augmentation) used by crop-doctor
-│   │   └── crop-classifier.js ← TF.js MobileNetV2 inference on 63-class model (PlantVillage + Beans + Cassava + FiveCrop); gracefully skips if model not trained
+│   │   └── crop-classifier.js ← TF.js MobileNetV2 inference on 95-class model (9 datasets); gracefully skips if model not trained
 │   ├── data/                  ← Runtime state — git-ignored, auto-created on first run
 │   │   ├── history.json       ← Conversation history by chatId
 │   │   └── memories.json      ← Long-term extracted facts by chatId
@@ -43,9 +43,9 @@ urvar-ai-assistant/
 │       ├── deploy.md                  ← End-to-end deployment checklist
 │       └── optimize-costs.md          ← Token footer, caching strategy, cost hotspots
 ├── ml/                        ← Python ML training pipeline (run once to produce the TF.js model)
-│   ├── train.py               ← Loads 4 datasets (PlantVillage, Beans, Cassava, FiveCrop), trains MobileNetV2, exports TF.js graph model
+│   ├── train.py               ← Loads 9 datasets (PlantVillage, Beans, Cassava, FiveCrop, Jute, IndianCrop, CCMT, PlantDoc, RiceNutrient), trains MobileNetV2, exports TF.js graph model
 │   ├── requirements.txt       ← tensorflow, tensorflow-datasets, tensorflowjs
-│   ├── labels.json            ← 63-class index → human-readable disease name (committed; overwritten by train.py)
+│   ├── labels.json            ← 95-class index → human-readable disease name (committed; overwritten by train.py)
 │   ├── venv/                  ← git-ignored; Python virtual environment
 │   ├── train.log              ← git-ignored; output of last training run
 │   └── models/                ← git-ignored; populated after running train.py
@@ -278,26 +278,48 @@ cd ml
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python3 train.py                # downloads datasets, trains 63-class model, exports TF.js
+python3 train.py                # trains 95-class model, exports TF.js
 ```
 
-**Datasets used (63 classes total):**
+**Datasets used (95 classes total):**
 | Dataset | Source | Classes |
 |---------|--------|---------|
 | PlantVillage | TF Datasets (`plant_village`) | 38 (indices 0–37) |
 | Beans | TF Datasets (`beans`) | 3 (indices 38–40) |
 | Cassava | TF Datasets (`cassava`) | 5 (indices 41–45) |
-| FiveCrop (Rice/Wheat/Corn/Potato/Sugarcane) | Kaggle `shubham2703/five-crop-diseases-dataset` → `ml/data/` (git-ignored) | 17 (indices 46–62) |
+| FiveCrop (Rice/Wheat/Corn/Potato/Sugarcane) | Kaggle `shubham2703/five-crop-diseases-dataset` → `ml/data/five-crop-diseases/` | 17 (indices 46–62) |
+| Jute | Kaggle `srkuhin/jute-leaf-disease-detection` → `ml/data/jute-leaf-disease/` | 2 (indices 63–64) |
+| IndianCrop (Coffee/Cotton/Jute/Rice/Sugarcane/Wheat) | Kaggle `alfiyasiddique/indian-crop-disease-dataset` → `ml/data/indian-crop-disease/` | 16 new + maps existing (indices 65–80) |
+| CCMT (Cashew/Cassava/Maize/Tomato) | Kaggle `nirmalsankalana/crop-pest-and-disease-detection` → `ml/data/ccmt/` | 11 new + maps existing (indices 81–91) |
+| PlantDoc | GitHub `pratikkayal/PlantDoc-Dataset` → `ml/data/PlantDoc-Dataset/` | 28 classes mapped to existing indices (no new classes; adds real-world field images) |
+| RiceNutrient (N/P/K deficiency) | Kaggle `guy007/nutrientdeficiencysymptomsinrice` → `ml/data/rice-nutrient-deficiency/` | 3 new (indices 92–94) |
 
-The FiveCrop dataset must be downloaded manually before training:
+Four datasets must be downloaded manually before training (PlantVillage, Beans, Cassava auto-download via TF Datasets):
 ```bash
 pip install kaggle
+
+# FiveCrop
 kaggle datasets download -d shubham2703/five-crop-diseases-dataset -p ml/data/five-crop-diseases --unzip
+
+# Jute
+kaggle datasets download -d srkuhin/jute-leaf-disease-detection -p ml/data/jute-leaf-disease --unzip
+
+# IndianCrop
+kaggle datasets download -d alfiyasiddique/indian-crop-disease-dataset -p ml/data/indian-crop-disease --unzip
+
+# CCMT
+kaggle datasets download -d nirmalsankalana/crop-pest-and-disease-detection -p ml/data/ccmt --unzip
+
+# PlantDoc (GitHub, ~900 MB — slow on throttled connections)
+git clone https://github.com/pratikkayal/PlantDoc-Dataset.git ml/data/PlantDoc-Dataset
+
+# RiceNutrient
+kaggle datasets download -d guy007/nutrientdeficiencysymptomsinrice -p ml/data/rice-nutrient-deficiency --unzip
 ```
 
 Outputs written to `ml/models/` (git-ignored). After training, the bot automatically uses the model — no config change needed. If `ml/models/tfjs_crop_classifier/` is absent, `crop-classifier.js` skips inference and crop-doctor falls back to vision-only diagnosis.
 
-The current committed model was trained on PlantVillage only (38 classes, 97.74% val accuracy). Re-run `train.py` to upgrade to 63 classes — back up `ml/models/tfjs_crop_classifier/` first if needed.
+The current committed model was trained on PlantVillage only (38 classes, 97.74% val accuracy). Re-run `train.py` after downloading all datasets above to produce the 95-class model — back up `ml/models/tfjs_crop_classifier/` first if needed.
 
 To verify datasets load correctly before a full training run:
 
